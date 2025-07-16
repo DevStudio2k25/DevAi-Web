@@ -1,0 +1,201 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Helper function for tokens validation
+    function isValidTokenUpdate(oldData, newData) {
+      let tokenDiff = newData.tokens - oldData.tokens;
+      return tokenDiff <= 0 || (isAdmin() && tokenDiff > 0); // Only admins can increase tokens
+    }
+
+    // Helper function to validate promo code redemption
+    function isValidPromoCodeRedemption(promoCode) {
+      return isAuthenticated() &&
+             promoCode.isActive == true &&
+             promoCode.expiresAt > request.time &&
+             !promoCode.usedByUsers.hasAny([request.auth.uid]);
+    }
+
+    // Device bindings collection rules - FIXED
+    match /device_bindings/{deviceId} {
+      // Allow reading and writing to device bindings without strict auth checks
+      // This is necessary because we need to check bindings before authentication is complete
+      allow read, write: if true;
+    }
+
+    // Admins collection rules
+    match /admins/{adminId} {
+      // Allow reading and writing admin data only for the admin themselves
+      allow read, write: if isAuthenticated() && isOwner(adminId);
+    }
+
+    // YouTube links collection rules
+    match /youtube_links/{linkId} {
+      // Allow reading YouTube links for all authenticated users
+      allow read: if isAuthenticated();
+      // Allow creating and updating YouTube links only for admins
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Promo codes collection rules
+    match /promo_codes/{codeId} {
+      // Allow reading promo codes for authenticated users
+      allow read: if isAuthenticated();
+      
+      // Allow updating usedByUsers array for redemption
+      allow update: if isAuthenticated() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedByUsers']) &&
+                      request.resource.data.usedByUsers.hasOnly(resource.data.usedByUsers.concat([request.auth.uid]));
+      
+      // Only admins can create, update, or delete promo codes
+      allow create, delete: if isAdmin();
+      
+      // Only admins can update promo code details
+      allow update: if isAdmin();
+    }
+    
+    // User likes collection - for tracking liked prompts
+    match /user_likes/{userId} {
+      // Only allow access to the user's own likes
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // Liked prompts subcollection
+      match /liked_prompts/{promptId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow create, delete: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // Community prompts collection rules
+    match /community_prompts/{promptId} {
+      // Allow reading community prompts for all authenticated users
+      allow read: if isAuthenticated();
+      // Allow creating community prompts if the user is authenticated and sets their own userId
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Allow updating likes and views
+      allow update: if isAuthenticated() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'views']);
+      // Only allow deletion by the owner or admin
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    // Users collection rules - UPDATED
+    match /users/{userId} {
+      // Allow listing all users for authenticated users
+      allow list: if isAuthenticated();
+      // Allow users to read and update their own data
+      allow read: if isAuthenticated() && isOwner(userId);
+      // Allow users to update their tokens
+      allow update: if isAuthenticated() && isOwner(userId);
+      // Allow creating own user document with any fields
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Allow updating own user document with specific field patterns
+      allow update: if isAuthenticated() && 
+                      request.auth.uid == userId &&
+                      (
+                        // For token updates
+                        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tokens']) &&
+                        request.resource.data.tokens > 0) ||
+                        // For other updates
+                        (request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName', 'email', 'photoURL', 'lastLogin', 'createdAt', 'apiKey']))
+                      );
+      allow delete: if isAuthenticated() && isOwner(userId);
+
+      // API key subcollection (keeping this for backward compatibility)
+      match /api_keys/{keyId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+
+      // History subcollection
+      match /history/{historyId} {
+        // Allow reading history for all authenticated users
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && isOwner(userId);
+        allow update: if isAuthenticated() && isOwner(userId);
+        allow delete: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // Prompts collection rules
+    match /prompts/{promptId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Project ideas collection rules
+    match /project_ideas/{ideaId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // User discussions collection rules
+    match /discussions/{discussionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'comments'])
+      );
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+        allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+        allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // Watched videos collection
+    match /watched_videos/{docId} {
+      allow read: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      // Allow create only if:
+      // 1. User is authenticated
+      // 2. Setting their own userId
+      // 3. Document has required fields
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.keys().hasAll(['userId', 'videoId', 'timestamp']);
+      allow update, delete: if false; // Once created, cannot be modified or deleted
+    }
+
+    // User unlocked prompts rules
+    match /user_unlocked/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      match /unlocked_prompts/{promptId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow create, delete: if isAuthenticated() && isOwner(userId);
+      }
+    }
+    
+    // User history rules
+    match /user_history/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow create, update, delete: if isAuthenticated() && isOwner(userId);
+      
+      match /prompts/{promptId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow create, update, delete: if isAuthenticated() && isOwner(userId);
+      }
+    }
+  }
+} 
