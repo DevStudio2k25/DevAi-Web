@@ -32,6 +32,7 @@ migrate_working_dir/
 .firebase/
 
 # Web related
+**/lib/generated_plugin_registrant.dart
 
 # Symbolication related
 app.*.symbols
@@ -48,12 +49,11 @@ app.*.map.json
 google-services.json
 GoogleService-Info.plist
 
-# Dependencies
+# Platform specific directories to ignore
 /windows/
 /macos/
 /linux/
 /ios/
-/android/
 
 # Large asset files
 *.mp4
@@ -66,9 +66,3 @@ GoogleService-Info.plist
 # Generated files
 *.g.dart
 *.freezed.dart
-*.mocks.dart
-
-# Environment files
-.env*
-*.env
-env.g.dart
