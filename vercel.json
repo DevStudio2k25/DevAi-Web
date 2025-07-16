@@ -1,36 +1,20 @@
 {
-  "version": 2,
-  "buildCommand": "chmod +x vercel-build.sh && ./vercel-build.sh",
+  "framework": "flutter",
+  "installCommand": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable /opt/flutter && export PATH=$PATH:/opt/flutter/bin && flutter precache && flutter doctor -v && flutter config --enable-web",
+  "buildCommand": "flutter build web --release",
   "outputDirectory": "build/web",
-  "public": true,
-  "cleanUrls": true,
-  "routes": [
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
     {
-      "src": "/assets/(.*)",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
-      "continue": true
-    },
-    {
-      "src": "/flutter.js",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
-      "continue": true
-    },
-    {
-      "src": "/main.dart.js",
-      "headers": { "cache-control": "public, max-age=31536000, immutable" },
-      "continue": true
-    },
-    {
-      "src": "/manifest.json",
-      "headers": { "cache-control": "public, max-age=0, must-revalidate" }
-    },
-    {
-      "src": "/(.+)",
-      "headers": { "cache-control": "public, max-age=0, must-revalidate" }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*).(js|css|json|ico|png)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 } 
