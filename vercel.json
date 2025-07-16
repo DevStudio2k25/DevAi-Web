@@ -1,18 +1,18 @@
 {
-  "framework": "flutter",
-  "installCommand": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable /opt/flutter && export PATH=$PATH:/opt/flutter/bin && flutter precache && flutter doctor -v && flutter config --enable-web",
-  "buildCommand": "flutter build web --release",
+  "version": 2,
+  "installCommand": "git clone https://github.com/flutter/flutter.git --depth 1 -b stable /opt/flutter && export PATH=\"$PATH:/opt/flutter/bin\" && flutter precache && flutter config --enable-web",
+  "buildCommand": "export PATH=\"$PATH:/opt/flutter/bin\" && flutter build web --release",
   "outputDirectory": "build/web",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
-      "source": "/(.*).(js|css|json|ico|png)",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }
