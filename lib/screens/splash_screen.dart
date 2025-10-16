@@ -4,7 +4,7 @@ import 'package:lottie/lottie.dart';
 import '../constants/app_constants.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 import 'auth_screen.dart';
 import 'prompt_form_screen.dart';
 
@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) =>
-            hasApiKey ? const HomeScreen() : const PromptFormScreen(),
+            hasApiKey ? const MainScreen() : const PromptFormScreen(),
       ),
     );
   }
@@ -124,77 +124,169 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.secondary,
-            ],
+            colors: [colorScheme.primary, colorScheme.secondary],
           ),
         ),
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Animated Logo
-                  FadeTransition(
-                    opacity: _fadeLogoAnimation,
-                    child: ScaleTransition(
-                      scale: _scaleLogoAnimation,
-                      child: ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Lottie.asset(
-                            'assets/lottie/DevAi.json',
-                            width: 150,
-                            height: 150,
-                            fit: BoxFit.cover,
+        child: Stack(
+          children: [
+            // Animated background circles
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Positioned(
+                  top: -100 + (_pulseAnimation.value * 20),
+                  right: -100,
+                  child: Opacity(
+                    opacity: 0.1,
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Positioned(
+                  bottom: -150 + (_pulseAnimation.value * -20),
+                  left: -100,
+                  child: Opacity(
+                    opacity: 0.1,
+                    child: Container(
+                      width: 400,
+                      height: 400,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Main content
+            Center(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, child) {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated Logo with glow
+                      FadeTransition(
+                        opacity: _fadeLogoAnimation,
+                        child: ScaleTransition(
+                          scale: _scaleLogoAnimation,
+                          child: ScaleTransition(
+                            scale: _pulseAnimation,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                    blurRadius: 40,
+                                    spreadRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(100),
+                                child: Container(
+                                  width: 180,
+                                  height: 180,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  padding: const EdgeInsets.all(15),
+                                  child: Lottie.asset(
+                                    'assets/lottie/DevAi.json',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Animated App Name
-                  FadeTransition(
-                    opacity: _fadeTextAnimation,
-                    child: Transform.translate(
-                      offset: Offset(0, _slideTextAnimation.value),
-                      child: Text(
-                        AppConstants.appName,
-                        style: Theme.of(context).textTheme.headlineLarge
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 40,
+                      const SizedBox(height: 40),
+                      // Animated App Name
+                      FadeTransition(
+                        opacity: _fadeTextAnimation,
+                        child: Transform.translate(
+                          offset: Offset(0, _slideTextAnimation.value),
+                          child: Text(
+                            AppConstants.appName,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 48,
+                                  letterSpacing: 2,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      offset: const Offset(0, 4),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Animated Tagline
+                      FadeTransition(
+                        opacity: _fadeTaglineAnimation,
+                        child: Text(
+                          'Your AI Development Companion',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 18,
+                                letterSpacing: 0.5,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: 60),
+                      // Loading indicator
+                      FadeTransition(
+                        opacity: _fadeTaglineAnimation,
+                        child: SizedBox(
+                          width: 40,
+                          height: 40,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white.withValues(alpha: 0.7),
                             ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Animated Tagline
-                  FadeTransition(
-                    opacity: _fadeTaglineAnimation,
-                    child: Text(
-                      'Your AI Development Companion',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white70,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

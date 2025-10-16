@@ -272,7 +272,7 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
     return Scaffold(
       floatingActionButton: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -280,9 +280,9 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: colorScheme.primary.withValues(alpha: 0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -290,46 +290,60 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
           color: Colors.transparent,
           child: InkWell(
             onTap: _generatePrompt,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: 26,
+                    height: 26,
                     child: Lottie.asset(
                       'assets/lottie/DevAi.json',
                       fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
                     'Generate',
                     style: TextStyle(
                       color: colorScheme.onPrimary,
-                      fontSize: 16,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
+                      horizontal: 8,
+                      vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: colorScheme.onPrimary.withOpacity(0.2),
+                      color: colorScheme.onPrimary.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      '-1',
-                      style: TextStyle(
-                        color: colorScheme.onPrimary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: Lottie.asset(
+                            'assets/lottie/DevAi.json',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '1',
+                          style: TextStyle(
+                            color: colorScheme.onPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -470,12 +484,34 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
                                       labelText: 'Project Name',
                                       hintText: 'e.g., TaskMaster, FitTrack',
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.outline,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.outline.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.primary,
+                                          width: 2,
+                                        ),
                                       ),
                                       filled: true,
-                                      fillColor: colorScheme.surface
-                                          .withOpacity(0.5),
-                                      prefixIcon: const Icon(Icons.title),
+                                      fillColor: colorScheme.surface.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.title_rounded,
+                                        color: colorScheme.primary,
+                                      ),
                                     ),
                                     validator: (value) {
                                       if (value == null ||
@@ -493,13 +529,33 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
                                       hintText:
                                           'e.g., A task management app with reminders',
                                       border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.outline,
+                                        ),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.outline.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: colorScheme.primary,
+                                          width: 2,
+                                        ),
                                       ),
                                       filled: true,
-                                      fillColor: colorScheme.surface
-                                          .withOpacity(0.5),
-                                      prefixIcon: const Icon(
-                                        Icons.lightbulb_outline,
+                                      fillColor: colorScheme.surface.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.lightbulb_outline_rounded,
+                                        color: colorScheme.primary,
                                       ),
                                     ),
                                     validator: (value) {
@@ -630,9 +686,9 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
     return Theme(
       data: Theme.of(context).copyWith(
         popupMenuTheme: PopupMenuThemeData(
-          elevation: 10,
+          elevation: 15,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
         ),
       ),
@@ -640,10 +696,23 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
         value: value,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: colorScheme.outline),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: colorScheme.outline.withValues(alpha: 0.3),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+          ),
           filled: true,
-          fillColor: colorScheme.surface.withOpacity(0.5),
-          prefixIcon: Icon(icon),
+          fillColor: colorScheme.surface.withValues(alpha: 0.5),
+          prefixIcon: Icon(icon, color: colorScheme.primary),
         ),
         items: items.map((item) {
           return DropdownMenuItem<String>(
@@ -653,9 +722,7 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
               child: Text(
                 item,
                 style: TextStyle(
-                  fontWeight: item == value
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  fontWeight: item == value ? FontWeight.bold : FontWeight.w500,
                   color: item == value
                       ? colorScheme.primary
                       : colorScheme.onSurface,
@@ -666,11 +733,14 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
           );
         }).toList(),
         onChanged: onChanged,
-        icon: Icon(Icons.arrow_drop_down_circle, color: colorScheme.primary),
-        iconSize: 24,
+        icon: Icon(
+          Icons.arrow_drop_down_circle_rounded,
+          color: colorScheme.primary,
+        ),
+        iconSize: 26,
         elevation: 16,
-        dropdownColor: colorScheme.surface.withOpacity(0.95),
-        borderRadius: BorderRadius.circular(16),
+        dropdownColor: colorScheme.surface.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(20),
         menuMaxHeight: 300,
         style: TextStyle(color: colorScheme.onSurface, fontSize: 16),
       ),

@@ -1,7 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui show Codec;
-import 'package:flutter/services.dart';
 
 class CachedCircleAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -38,10 +35,11 @@ class CachedCircleAvatar extends StatelessWidget {
             )
           : null,
       child: imageUrl == null ? child : null,
-      onBackgroundImageError: (exception, stackTrace) {
-        debugPrint('Error loading profile image: $exception');
-        // The CircleAvatar will automatically show the child (fallback) widget if the image fails to load
-      },
+      onBackgroundImageError: imageUrl != null
+          ? (exception, stackTrace) {
+              debugPrint('Error loading profile image: $exception');
+            }
+          : null,
     );
   }
 }

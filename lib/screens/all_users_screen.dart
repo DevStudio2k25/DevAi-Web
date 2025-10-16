@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:lottie/lottie.dart';
+import '../widgets/cached_network_image.dart';
 
 class AllUsersScreen extends StatefulWidget {
   const AllUsersScreen({super.key});
@@ -13,6 +13,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   List<Map<String, dynamic>> _allUsers = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  String _searchQuery = '';
+  int? _expandedIndex;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
             'displayName': doc.data()['displayName'] ?? 'Anonymous',
             'photoURL': doc.data()['photoURL'],
             'projectCount': doc.data()['projectCount'] ?? 0,
+            'email': doc.data()['email'] ?? '',
           };
         }).toList();
         _isLoading = false;
@@ -50,135 +53,381 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
     }
   }
 
+  List<Map<String, dynamic>> get _filteredUsers {
+    if (_searchQuery.isEmpty) return _allUsers;
+    return _allUsers.where((user) {
+      return user['displayName'].toString().toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+    }).toList();
+  }
+
+  Color _getRankColor(int rank) {
+    switch (rank) {
+      case 0:
+        return const Color(0xFF00D4FF);
+      case 1:
+        return const Color(0xFFFFD700);
+      case 2:
+        return const Color(0xFFC0C0C0);
+      case 3:
+        return const Color(0xFFCD7F32);
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.primary.withOpacity(0.8),
-                    colorScheme.secondary.withOpacity(0.9),
-                  ],
-                ),
-              ),
-            ),
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Lottie.asset(
-                    'assets/lottie/DevAi.json',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Text('Community Creators'),
-              ],
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colorScheme.primary.withValues(alpha: 0.1),
+              colorScheme.surface,
+            ],
           ),
-          SliverToBoxAdapter(
-            child: Container(
-              height: MediaQuery.of(context).size.height,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.primary.withOpacity(0.8),
-                    colorScheme.secondary.withOpacity(0.9),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Community',
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_filteredUsers.length} developers',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Search Bar
+                    TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search developers...',
+                        filled: true,
+                        fillColor: colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+              // Users List
+              Expanded(
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _errorMessage.isNotEmpty
                     ? Center(
-                        child: Text(
-                          _errorMessage,
-                          style: TextStyle(color: colorScheme.error),
+                        child: CircularProgressIndicator(
+                          color: colorScheme.primary,
                         ),
                       )
-                    : ListView.builder(
-                        itemCount: _allUsers.length,
-                        itemBuilder: (context, index) {
-                          final user = _allUsers[index];
-                          return Container(
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surface.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
-                                ),
-                              ],
+                    : _errorMessage.isNotEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 64,
+                              color: colorScheme.error.withValues(alpha: 0.5),
                             ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                radius: 20,
-                                backgroundImage: user['photoURL'] != null
-                                    ? NetworkImage(user['photoURL'])
-                                    : null,
-                                child: user['photoURL'] == null
-                                    ? Text(
-                                        user['displayName'][0].toUpperCase(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )
-                                    : null,
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage,
+                              style: TextStyle(color: colorScheme.error),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : _filteredUsers.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.3,
                               ),
-                              title: Text(
-                                user['displayName'],
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                              trailing: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Projects: ${user['projectCount']}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
-                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No developers found',
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                             ),
-                          );
-                        },
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchAllUsers,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: _filteredUsers.length,
+                          itemBuilder: (context, index) {
+                            final user = _filteredUsers[index];
+                            final actualRank = _allUsers.indexOf(user);
+                            return _buildUserCard(context, user, actualRank);
+                          },
+                        ),
                       ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserCard(
+    BuildContext context,
+    Map<String, dynamic> user,
+    int rank,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isTopThree = rank < 3;
+    final isTopFour = rank < 4;
+    final rankColor = _getRankColor(rank);
+    final isExpanded = _expandedIndex == rank;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isTopFour
+              ? rankColor.withValues(alpha: 0.3)
+              : colorScheme.outline.withValues(alpha: 0.2),
+          width: isTopFour ? 2 : 1,
+        ),
+        boxShadow: isTopFour
+            ? [
+                BoxShadow(
+                  color: rankColor.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: isTopThree
+                ? () {
+                    setState(() {
+                      _expandedIndex = isExpanded ? null : rank;
+                    });
+                  }
+                : null,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Rank Number
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isTopFour
+                          ? rankColor.withValues(alpha: 0.2)
+                          : colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '#${rank + 1}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isTopFour ? rankColor : colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // User Avatar
+                  CachedCircleAvatar(
+                    radius: 28,
+                    imageUrl: user['photoURL'],
+                    backgroundColor: colorScheme.primaryContainer,
+                    child: Text(
+                      user['displayName'][0].toUpperCase(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // User Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user['displayName'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${user['projectCount']} projects',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Badge for top 4
+                  if (isTopFour)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            rankColor.withValues(alpha: 0.8),
+                            rankColor.withValues(alpha: 0.6),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Top ${rank + 1}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  // Expand icon for top 3
+                  if (isTopThree) ...[
+                    const SizedBox(width: 8),
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: rankColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '▼',
+                          style: TextStyle(fontSize: 12, color: rankColor),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ),
+          // Expanded Content for Top 3
+          if (isTopThree && isExpanded)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    Divider(
+                      color: rankColor.withValues(alpha: 0.3),
+                      thickness: 1,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatItem(
+                          context,
+                          'Rank',
+                          '#${rank + 1}',
+                          rankColor,
+                        ),
+                        _buildStatItem(
+                          context,
+                          'Projects',
+                          '${user['projectCount']}',
+                          rankColor,
+                        ),
+                        _buildStatItem(context, 'Status', 'Active', rankColor),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatItem(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+      ],
     );
   }
 }

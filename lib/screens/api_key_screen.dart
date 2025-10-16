@@ -5,9 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lottie/lottie.dart';
 import '../providers/app_provider.dart';
 import '../constants/app_constants.dart';
-import '../services/gemini_service.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 
 class ApiKeyScreen extends StatefulWidget {
   const ApiKeyScreen({super.key});
@@ -109,7 +108,7 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
           // Navigate to main screen after successful API key setup
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const MainScreen()),
           );
         }
       } catch (e) {
@@ -142,8 +141,8 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              colorScheme.primary.withOpacity(0.8),
-              colorScheme.secondary.withOpacity(0.9),
+              colorScheme.primary.withValues(alpha: 0.8),
+              colorScheme.secondary.withValues(alpha: 0.9),
             ],
           ),
         ),
@@ -183,50 +182,107 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
                   // Glassmorphic Card
                   Container(
                     decoration: BoxDecoration(
-                      color: colorScheme.surface.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(24),
+                      color: colorScheme.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 1.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          spreadRadius: 2,
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 20,
+                          spreadRadius: 5,
                         ),
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(28),
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                         child: Padding(
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(32),
                           child: Form(
                             key: _formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Text(
-                                  'Enter your API Key',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(color: colorScheme.onSurface),
-                                  textAlign: TextAlign.center,
+                                // Icon
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primaryContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.vpn_key_rounded,
+                                    size: 40,
+                                    color: colorScheme.primary,
+                                  ),
                                 ),
                                 const SizedBox(height: 24),
+                                Text(
+                                  'Setup API Key',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        color: colorScheme.onSurface,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Enter your Gemini API key to unlock AI-powered features',
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: colorScheme.onSurface.withValues(
+                                          alpha: 0.7,
+                                        ),
+                                      ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 32),
                                 TextFormField(
                                   controller: _apiKeyController,
                                   decoration: InputDecoration(
-                                    labelText: 'API Key',
-                                    hintText: 'Enter your API key',
+                                    labelText: 'Gemini API Key',
+                                    hintText: 'AIzaSy...',
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: colorScheme.outline,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: colorScheme.outline.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      borderSide: BorderSide(
+                                        color: colorScheme.primary,
+                                        width: 2,
+                                      ),
                                     ),
                                     filled: true,
-                                    fillColor: colorScheme.surface,
-                                    prefixIcon: const Icon(Icons.key),
+                                    fillColor: colorScheme.surface.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.key_rounded,
+                                      color: colorScheme.primary,
+                                    ),
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscureText
-                                            ? Icons.visibility_off
-                                            : Icons.visibility,
+                                            ? Icons.visibility_off_rounded
+                                            : Icons.visibility_rounded,
                                       ),
                                       onPressed: () {
                                         setState(() {
@@ -240,46 +296,68 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
                                     if (value == null || value.trim().isEmpty) {
                                       return 'Please enter your API key';
                                     }
+                                    if (!value.startsWith('AIza')) {
+                                      return 'Invalid API key format';
+                                    }
                                     return null;
                                   },
                                   onFieldSubmitted: (_) => _submitApiKey(),
                                 ),
                                 const SizedBox(height: 24),
-                                FilledButton(
+                                FilledButton.icon(
                                   onPressed: _isVerifying
                                       ? null
                                       : _submitApiKey,
                                   style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 18,
+                                    ),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(16),
                                     ),
                                   ),
-                                  child: _isVerifying
-                                      ? Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: colorScheme.onPrimary,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            const Text('Verifying...'),
-                                          ],
+                                  icon: _isVerifying
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: colorScheme.onPrimary,
+                                          ),
                                         )
-                                      : const Text('Continue'),
+                                      : const Icon(Icons.check_circle_rounded),
+                                  label: Text(
+                                    _isVerifying
+                                        ? 'Verifying...'
+                                        : 'Verify & Continue',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 16),
-                                TextButton.icon(
+                                OutlinedButton.icon(
                                   onPressed: _launchApiKeyUrl,
-                                  icon: const Icon(Icons.open_in_new),
-                                  label: const Text('Get an API Key'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: colorScheme.primary,
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
+                                    side: BorderSide(
+                                      color: colorScheme.primary.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.open_in_new_rounded),
+                                  label: const Text(
+                                    'Get Free API Key',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],

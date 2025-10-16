@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
+import 'main_screen.dart';
 import 'api_key_screen.dart';
-import 'prompt_form_screen.dart';
 import 'package:lottie/lottie.dart';
 import '../constants/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,7 +57,7 @@ class _AuthScreenState extends State<AuthScreen> {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) =>
-                hasApiKey ? const HomeScreen() : const ApiKeyScreen(),
+                hasApiKey ? const MainScreen() : const ApiKeyScreen(),
           ),
         );
       }
@@ -107,8 +106,8 @@ class _AuthScreenState extends State<AuthScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              colorScheme.primary.withOpacity(0.8),
-              colorScheme.secondary.withOpacity(0.9),
+              colorScheme.primary.withValues(alpha: 0.8),
+              colorScheme.secondary.withValues(alpha: 0.9),
             ],
           ),
         ),
@@ -154,13 +153,17 @@ class _AuthScreenState extends State<AuthScreen> {
                   Container(
                     constraints: const BoxConstraints(maxWidth: 400),
                     decoration: BoxDecoration(
-                      color: colorScheme.surface.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(24),
+                      color: colorScheme.surface.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 1.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          spreadRadius: 2,
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 20,
+                          spreadRadius: 5,
                         ),
                       ],
                     ),
@@ -190,8 +193,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                     : 'Sign in with Google to start your journey',
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
-                                      color: colorScheme.onSurface.withOpacity(
-                                        0.7,
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.7,
                                       ),
                                     ),
                                 textAlign: TextAlign.center,
@@ -241,34 +244,59 @@ class _AuthScreenState extends State<AuthScreen> {
 
                               // Google Sign In Button
                               _isLoading
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
+                                  ? Center(
+                                      child: Column(
+                                        children: [
+                                          CircularProgressIndicator(
+                                            color: colorScheme.primary,
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Text(
+                                            'Signing in...',
+                                            style: TextStyle(
+                                              color: colorScheme.onSurface
+                                                  .withValues(alpha: 0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     )
-                                  : FilledButton.icon(
+                                  : FilledButton(
                                       onPressed: _handleGoogleAuth,
                                       style: FilledButton.styleFrom(
                                         backgroundColor: Colors.white,
                                         foregroundColor: Colors.black87,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 24,
-                                          vertical: 16,
+                                          vertical: 18,
                                         ),
+                                        elevation: 2,
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
-                                            30,
+                                            16,
                                           ),
                                         ),
                                       ),
-                                      icon: const Icon(
-                                        Icons.g_mobiledata,
-                                        size: 24,
-                                      ),
-                                      label: const Text(
-                                        'Continue with Google',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          // Google Logo from assets
+                                          Image.asset(
+                                            'assets/images/Google.png',
+                                            width: 24,
+                                            height: 24,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          const Text(
+                                            'Continue with Google',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              letterSpacing: 0.3,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                             ],

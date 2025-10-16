@@ -7,14 +7,13 @@ import 'firebase_options.dart'; // Import Firebase options
 import 'constants/app_constants.dart';
 import 'providers/app_provider.dart';
 import 'screens/api_key_screen.dart';
-import 'screens/prompt_form_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/history_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/chat_result_screen.dart';
 import 'screens/public_history_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_screen.dart';
 import 'screens/auth_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/promo_code_screen.dart';
 import 'services/gemini_service.dart';
 import 'services/storage_service.dart';
 import 'services/auth_service.dart';
@@ -72,16 +71,19 @@ class MyApp extends StatelessWidget {
       theme: AppConstants.lightTheme,
       darkTheme: AppConstants.darkTheme,
       themeMode: provider.themeMode,
+      themeAnimationDuration: const Duration(milliseconds: 500),
+      themeAnimationCurve: Curves.easeInOutCubicEmphasized,
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/auth': (context) => const AuthScreen(),
         '/api-key': (context) => const ApiKeyScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => const MainScreen(),
         '/history': (context) => const HistoryScreen(),
-        '/settings': (context) => const SettingsScreen(),
+        '/profile': (context) => const ProfileScreen(),
         '/public-history': (context) => const PublicHistoryScreen(),
+        '/promo-code': (context) => const PromoCodeScreen(),
       },
     );
   }

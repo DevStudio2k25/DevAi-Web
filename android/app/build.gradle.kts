@@ -10,16 +10,10 @@ plugins {
 
 // Load keystore properties from key.properties file
 val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("../key.properties")
 
-val keystoreFile = rootProject.file("key.properties")
-if (keystoreFile.exists()) {
-    println("✅ [DEBUG] key.properties file found at: ${keystoreFile.absolutePath}")
-    keystoreProperties.load(FileInputStream(keystoreFile))
-    println("✅ [DEBUG] Keystore values loaded:")
-    println("   storeFile = ${keystoreProperties["storeFile"]}")
-    println("   keyAlias = ${keystoreProperties["keyAlias"]}")
-} else {
-    println("❌ [ERROR] key.properties file not found at: ${keystoreFile.absolutePath}")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -38,7 +32,7 @@ android {
 
     defaultConfig {
         applicationId = "com.devstudio.devai"
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -47,14 +41,11 @@ android {
 
     signingConfigs {
         create("release") {
-            try {
-                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+            if (keystorePropertiesFile.exists()) {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
-                println("✅ [DEBUG] Signing config created successfully with keystore at: ${storeFile?.absolutePath}")
-            } catch (e: Exception) {
-                println("❌ [ERROR] Failed to set signing config: ${e.message}")
+                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
             }
         }
     }
@@ -64,10 +55,6 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
         }
     }
 }
