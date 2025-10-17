@@ -1,11 +1,11 @@
+// ignore_for_file: avoid_print
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -14,9 +14,9 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final DeviceInfoPlugin _deviceInfoPlugin = DeviceInfoPlugin();
 
-  static const int DEFAULT_TOKENS = 20; // Changed back to 20
-  static const String DEVICE_ID_KEY = 'device_id';
-  static const String BOUND_EMAIL_KEY = 'bound_email';
+  static const int defaultTokens = 25; // Changed back to 20
+  static const String deviceIdKey = 'device_id';
+  static const String boundEmailKey = 'bound_email';
 
   AuthService(this._prefs);
 
@@ -28,7 +28,7 @@ class AuthService {
 
   // Get device ID based on platform
   Future<String> getDeviceId() async {
-    String deviceId = _prefs.getString(DEVICE_ID_KEY) ?? '';
+    String deviceId = _prefs.getString(deviceIdKey) ?? '';
 
     // If we already have a stored device ID, return it
     if (deviceId.isNotEmpty) {
@@ -53,14 +53,14 @@ class AuthService {
       }
 
       // Store the device ID for future use
-      await _prefs.setString(DEVICE_ID_KEY, deviceId);
+      await _prefs.setString(deviceIdKey, deviceId);
       print('Stored device ID in SharedPreferences: $deviceId');
       return deviceId;
     } catch (e) {
       print('Error getting device ID: $e');
       // Fallback to timestamp if device info fails
       deviceId = 'fallback_${DateTime.now().millisecondsSinceEpoch}';
-      await _prefs.setString(DEVICE_ID_KEY, deviceId);
+      await _prefs.setString(deviceIdKey, deviceId);
       print('Stored fallback device ID due to error: $deviceId');
       return deviceId;
     }
@@ -73,7 +73,7 @@ class AuthService {
       print('Checking if device $deviceId is bound to another account');
 
       // Check if we have a stored bound email
-      final boundEmail = _prefs.getString(BOUND_EMAIL_KEY);
+      final boundEmail = _prefs.getString(boundEmailKey);
       if (boundEmail != null && boundEmail.isNotEmpty) {
         print('Found locally stored bound email: $boundEmail');
         // If the stored email matches the current one, allow login
@@ -94,7 +94,7 @@ class AuthService {
         print('Creating device binding for: $deviceId with email: $email');
 
         // Store the bound email locally first
-        await _prefs.setString(BOUND_EMAIL_KEY, email);
+        await _prefs.setString(boundEmailKey, email);
         print('Stored bound email locally: $email');
 
         // Try to store in Firestore, but don't fail if it doesn't work
@@ -157,12 +157,12 @@ class AuthService {
           .get();
 
       if (doc.exists) {
-        final tokens = doc.data()?['tokens'] as int? ?? DEFAULT_TOKENS;
+        final tokens = doc.data()?['tokens'] as int? ?? defaultTokens;
         print('Retrieved user tokens: $tokens');
         return tokens;
       }
-      print('User document not found, using default tokens: $DEFAULT_TOKENS');
-      return DEFAULT_TOKENS;
+      print('User document not found, using default tokens: $defaultTokens');
+      return defaultTokens;
     } catch (e) {
       print('Error getting tokens: $e');
       return 0;
@@ -285,9 +285,7 @@ class AuthService {
 
         if (isNewUser || !userDoc.exists) {
           // For new users, set up the initial data
-          print(
-            'Setting up new user data with DEFAULT_TOKENS: $DEFAULT_TOKENS',
-          );
+          print('Setting up new user data with defaultTokens: $defaultTokens');
           await userRef.set({
             'email': userCredential.user!.email,
             'displayName': userCredential.user!.displayName,
@@ -295,7 +293,7 @@ class AuthService {
             'lastLogin': FieldValue.serverTimestamp(),
             'createdAt': FieldValue.serverTimestamp(),
             'projectCount': 0, // Initialize project count
-            'tokens': DEFAULT_TOKENS, // Initialize with default tokens
+            'tokens': defaultTokens, // Initialize with default tokens
           }, SetOptions(merge: true));
         } else {
           // For existing users, just update the login timestamp
@@ -341,7 +339,7 @@ class AuthService {
       print('Deleted device binding from Firestore: $deviceId');
 
       // Clear from SharedPreferences
-      await _prefs.remove(BOUND_EMAIL_KEY);
+      await _prefs.remove(boundEmailKey);
       print('Cleared bound email from SharedPreferences');
 
       print('Device binding cleared successfully');

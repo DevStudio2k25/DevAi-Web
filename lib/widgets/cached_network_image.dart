@@ -34,12 +34,12 @@ class CachedCircleAvatar extends StatelessWidget {
                   .toInt(),
             )
           : null,
-      child: imageUrl == null ? child : null,
       onBackgroundImageError: imageUrl != null
           ? (exception, stackTrace) {
               debugPrint('Error loading profile image: $exception');
             }
           : null,
+      child: imageUrl == null ? child : null,
     );
   }
 }

@@ -4,7 +4,8 @@ import 'package:lottie/lottie.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math' show pi;
 
-import '../screens/prompt_form_screen.dart';
+import 'prompt_form/prompt_form_screen.dart';
+import 'about_screen.dart';
 import '../widgets/cached_network_image.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen>
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+    )..repeat(); // Continuous one-direction rotation
   }
 
   @override
@@ -113,15 +114,7 @@ class _HomeScreenState extends State<HomeScreen>
                       // User Info
                       Row(
                         children: [
-                          CachedCircleAvatar(
-                            radius: 24,
-                            imageUrl: user?.photoURL,
-                            backgroundColor: colorScheme.primaryContainer,
-                            child: Icon(
-                              Icons.person,
-                              color: colorScheme.primary,
-                            ),
-                          ),
+                          _buildHeaderAvatar(context, user, colorScheme),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,54 +165,78 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ],
                       ),
-                      // Tokens
-                      StreamBuilder<int>(
-                        stream: _userTokensStream,
-                        builder: (context, snapshot) {
-                          final tokens = snapshot.data ?? 0;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  colorScheme.primary.withValues(alpha: 0.2),
-                                  colorScheme.secondary.withValues(alpha: 0.2),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: colorScheme.primary.withValues(
-                                  alpha: 0.3,
+                      // Tokens & Info
+                      Row(
+                        children: [
+                          StreamBuilder<int>(
+                            stream: _userTokensStream,
+                            builder: (context, snapshot) {
+                              final tokens = snapshot.data ?? 0;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Lottie.asset(
-                                    'assets/lottie/DevAi.json',
-                                    fit: BoxFit.cover,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      colorScheme.primary.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      colorScheme.secondary.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.3,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '$tokens',
-                                  style: TextStyle(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: Lottie.asset(
+                                        'assets/lottie/DevAi.json',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '$tokens',
+                                      style: TextStyle(
+                                        color: colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const AboutScreen(),
+                                ),
+                              );
+                            },
+                            icon: Icon(
+                              Icons.info_outline,
+                              color: colorScheme.primary,
                             ),
-                          );
-                        },
+                            tooltip: 'About DevAi',
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -281,106 +298,111 @@ class _HomeScreenState extends State<HomeScreen>
               gradient: SweepGradient(
                 colors: [
                   colorScheme.primary.withValues(alpha: 0.8),
-                  colorScheme.secondary.withValues(alpha: 0.8),
-                  colorScheme.tertiary.withValues(alpha: 0.8),
+                  const Color(0xFF00BCD4).withValues(alpha: 0.8), // Light Cyan
                   colorScheme.primary.withValues(alpha: 0.8),
                 ],
-                stops: const [0.0, 0.33, 0.66, 1.0],
+                stops: const [0.0, 0.5, 1.0],
                 transform: GradientRotation(_glowController.value * 2 * pi),
               ),
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
+                // Primary glow
                 BoxShadow(
-                  color: colorScheme.primary.withValues(
-                    alpha: 0.3 + (_glowController.value * 0.2),
-                  ),
-                  blurRadius: 20 + (_glowController.value * 10),
+                  color: colorScheme.primary.withValues(alpha: 0.4),
+                  blurRadius: 25,
                   spreadRadius: 2,
+                ),
+                // Cyan glow
+                BoxShadow(
+                  color: const Color(0xFF00BCD4).withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  spreadRadius: 1,
                 ),
               ],
             ),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.surface,
-                    colorScheme.surface.withValues(alpha: 0.95),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              colorScheme.primary.withValues(alpha: 0.2),
-                              colorScheme.secondary.withValues(alpha: 0.2),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: colorScheme.primary,
-                          size: 32,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              colorScheme.primary.withValues(alpha: 0.2),
-                              colorScheme.secondary.withValues(alpha: 0.2),
-                            ],
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  ShaderMask(
-                    shaderCallback: (bounds) => LinearGradient(
-                      colors: [colorScheme.primary, colorScheme.secondary],
-                    ).createShader(bounds),
-                    child: const Text(
-                      'Generate Project',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Create your next big idea with AI assistance',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: _buildCardContent(context, colorScheme),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCardContent(BuildContext context, ColorScheme colorScheme) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.surface,
+            colorScheme.surface.withValues(alpha: 0.95),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.primary.withValues(alpha: 0.2),
+                      colorScheme.secondary.withValues(alpha: 0.2),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  color: colorScheme.primary,
+                  size: 32,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.primary.withValues(alpha: 0.2),
+                      colorScheme.secondary.withValues(alpha: 0.2),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.arrow_forward, color: colorScheme.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ShaderMask(
+            shaderCallback: (bounds) => LinearGradient(
+              colors: [colorScheme.primary, colorScheme.secondary],
+            ).createShader(bounds),
+            child: const Text(
+              'Generate Project',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create your next big idea with AI assistance',
+            style: TextStyle(
+              fontSize: 14,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -529,19 +551,12 @@ class _HomeScreenState extends State<HomeScreen>
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // User Avatar
-                                CachedCircleAvatar(
-                                  radius: 30,
-                                  imageUrl: user['photoURL'],
-                                  backgroundColor: colorScheme.surface
-                                      .withValues(alpha: 0.3),
-                                  child: Text(
-                                    user['displayName'][0].toUpperCase(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                    ),
-                                  ),
+                                // User Avatar with Animated Ring
+                                _buildAnimatedAvatar(
+                                  context,
+                                  user: user,
+                                  rank: index + 1,
+                                  rankColor: rankData['borderColor'] as Color,
                                 ),
                                 const SizedBox(height: 10),
                                 // User Name
@@ -647,6 +662,290 @@ class _HomeScreenState extends State<HomeScreen>
           },
         );
       },
+    );
+  }
+
+  Widget _buildHeaderAvatar(
+    BuildContext context,
+    User? user,
+    ColorScheme colorScheme,
+  ) {
+    if (user == null) {
+      return CachedCircleAvatar(
+        radius: 24,
+        imageUrl: null,
+        backgroundColor: colorScheme.primaryContainer,
+        child: Icon(Icons.person, color: colorScheme.primary),
+      );
+    }
+
+    // Check if current user is in top 3
+    final userRank = _topUsers.indexWhere((u) => u['id'] == user.uid);
+    final isInTop3 = userRank >= 0 && userRank < 3;
+
+    if (isInTop3) {
+      return _buildRankRing(
+        context,
+        rank: userRank + 1,
+        photoURL: user.photoURL,
+        colorScheme: colorScheme,
+      );
+    }
+
+    // Regular avatar without animation
+    return CachedCircleAvatar(
+      radius: 24,
+      imageUrl: user.photoURL,
+      backgroundColor: colorScheme.primaryContainer,
+      child: Icon(Icons.person, color: colorScheme.primary),
+    );
+  }
+
+  Widget _buildRankRing(
+    BuildContext context, {
+    required int rank,
+    required String? photoURL,
+    required ColorScheme colorScheme,
+  }) {
+    // Define colors and stops based on rank
+    List<Color> colors;
+    List<double> stops;
+
+    switch (rank) {
+      case 1: // #1 - Rainbow (7 colors)
+        colors = [
+          const Color(0xFFFF0000), // Red
+          const Color(0xFFFF7F00), // Orange
+          const Color(0xFFFFFF00), // Yellow
+          const Color(0xFF00FF00), // Green
+          const Color(0xFF0000FF), // Blue
+          const Color(0xFF4B0082), // Indigo
+          const Color(0xFF9400D3), // Violet
+          const Color(0xFFFF0000), // Red (loop)
+        ];
+        stops = [0.0, 0.14, 0.28, 0.42, 0.56, 0.70, 0.84, 1.0];
+        break;
+
+      case 2: // #2 - Purple/Magenta (4 colors) - Contrasts with gold card
+        colors = [
+          const Color(0xFFE91E63), // Pink
+          const Color(0xFF9C27B0), // Purple
+          const Color(0xFFBA68C8), // Light Purple
+          const Color(0xFFAB47BC), // Medium Purple
+          const Color(0xFFE91E63), // Pink (loop)
+        ];
+        stops = [0.0, 0.25, 0.5, 0.75, 1.0];
+        break;
+
+      case 3: // #3 - Teal/Cyan (2 colors) - Contrasts with silver card
+        colors = [
+          const Color(0xFF00BCD4), // Cyan
+          const Color(0xFF00ACC1), // Dark Cyan
+          const Color(0xFF00BCD4), // Cyan (loop)
+        ];
+        stops = [0.0, 0.5, 1.0];
+        break;
+
+      default:
+        colors = [colorScheme.primary];
+        stops = [1.0];
+    }
+
+    return AnimatedBuilder(
+      animation: _glowController,
+      builder: (context, child) {
+        return Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              // Outer glow
+              BoxShadow(
+                color: colors[0].withValues(alpha: 0.6),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+              // Inner glow
+              BoxShadow(
+                color: colors[colors.length ~/ 2].withValues(alpha: 0.4),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: SweepGradient(
+                colors: colors,
+                stops: stops,
+                transform: GradientRotation(_glowController.value * 2 * pi),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(3),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorScheme.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: CachedCircleAvatar(
+                    radius: 22,
+                    imageUrl: photoURL,
+                    backgroundColor: colorScheme.primaryContainer,
+                    child: Icon(Icons.person, color: colorScheme.primary),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnimatedAvatar(
+    BuildContext context, {
+    required Map<String, dynamic> user,
+    required int rank,
+    required Color rankColor,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Show animated ring for top 3 (all users, not just current)
+    if (rank <= 3) {
+      // Get multi-color gradient based on rank
+      List<Color> colors;
+      List<double> stops;
+
+      switch (rank) {
+        case 1: // #1 - Rainbow (7 colors)
+          colors = [
+            const Color(0xFFFF0000), // Red
+            const Color(0xFFFF7F00), // Orange
+            const Color(0xFFFFFF00), // Yellow
+            const Color(0xFF00FF00), // Green
+            const Color(0xFF0000FF), // Blue
+            const Color(0xFF4B0082), // Indigo
+            const Color(0xFF9400D3), // Violet
+            const Color(0xFFFF0000), // Red (loop)
+          ];
+          stops = [0.0, 0.14, 0.28, 0.42, 0.56, 0.70, 0.84, 1.0];
+          break;
+
+        case 2: // #2 - Purple/Magenta (4 colors) - Contrasts with gold card
+          colors = [
+            const Color(0xFFE91E63), // Pink
+            const Color(0xFF9C27B0), // Purple
+            const Color(0xFFBA68C8), // Light Purple
+            const Color(0xFFAB47BC), // Medium Purple
+            const Color(0xFFE91E63), // Pink (loop)
+          ];
+          stops = [0.0, 0.25, 0.5, 0.75, 1.0];
+          break;
+
+        case 3: // #3 - Teal/Cyan (2 colors) - Contrasts with silver card
+          colors = [
+            const Color(0xFF00BCD4), // Cyan
+            const Color(0xFF00ACC1), // Dark Cyan
+            const Color(0xFF00BCD4), // Cyan (loop)
+          ];
+          stops = [0.0, 0.5, 1.0];
+          break;
+
+        default:
+          colors = [rankColor];
+          stops = [1.0];
+      }
+
+      return AnimatedBuilder(
+        animation: _glowController,
+        builder: (context, child) {
+          return Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                // Outer glow
+                BoxShadow(
+                  color: colors[0].withValues(alpha: 0.6),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+                // Inner glow
+                BoxShadow(
+                  color: colors[colors.length ~/ 2].withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: colors,
+                  stops: stops,
+                  transform: GradientRotation(_glowController.value * 2 * pi),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: CachedCircleAvatar(
+                      radius: 28,
+                      imageUrl: user['photoURL'],
+                      backgroundColor: colorScheme.surface.withValues(
+                        alpha: 0.3,
+                      ),
+                      child: Text(
+                        user['displayName'][0].toUpperCase(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    // Regular avatar without animation
+    return CachedCircleAvatar(
+      radius: 30,
+      imageUrl: user['photoURL'],
+      backgroundColor: colorScheme.surface.withValues(alpha: 0.3),
+      child: Text(
+        user['displayName'][0].toUpperCase(),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+      ),
     );
   }
 

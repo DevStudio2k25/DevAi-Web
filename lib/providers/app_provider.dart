@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +11,7 @@ import '../services/storage_service.dart';
 import '../services/auth_service.dart';
 
 class AppProvider extends ChangeNotifier {
+  // ignore: unused_field
   final StorageService _storageService;
   final GeminiService _geminiService;
   final SharedPreferences _prefs;
@@ -39,15 +42,29 @@ class AppProvider extends ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
 
   Future<void> _loadInitialData() async {
+    print('🔵 [INIT] _loadInitialData() called');
+
     // Load API key from Firestore if user is logged in
     if (_authService.isLoggedIn) {
+      print('👤 [INIT] User is logged in, loading data...');
+
       final apiKey = await _authService.getUserApiKey();
       _hasApiKey = apiKey != null;
       if (_hasApiKey) {
         await _geminiService.initialize(apiKey: apiKey);
       }
+
+      // Load tokens from Firestore
+      print('🪙 [INIT] Loading tokens from Firestore...');
+      final tokens = await _authService.getUserTokens();
+      print('🪙 [INIT] Tokens loaded from Firestore: $tokens');
+      _tokens = tokens;
+      print('🪙 [INIT] Local tokens set to: $_tokens');
+
       await _loadPromptHistory();
     } else {
+      print('⚠️ [INIT] User not logged in');
+
       // If not logged in, load from SharedPreferences as fallback
       _loadPromptHistoryFromPrefs();
     }
@@ -212,13 +229,16 @@ class AppProvider extends ChangeNotifier {
     PromptRequest request, {
     bool shareWithCommunity = true,
   }) async {
+    print('🔵 [APP PROVIDER] generatePrompt() called');
+    print('🪙 [APP PROVIDER] Current tokens BEFORE generation: $_tokens');
+
     _isLoading = true;
     notifyListeners();
 
     try {
-      print('Generating prompt for request: ${request.projectName}');
+      print('🤖 [APP PROVIDER] Generating prompt for: ${request.projectName}');
       final response = await _geminiService.generatePrompt(request);
-      print('Received response from Gemini service');
+      print('✅ [APP PROVIDER] Received response from Gemini service');
 
       // Convert to ISO string for consistent storage
       final timestamp = DateTime.now().toIso8601String();
@@ -240,13 +260,18 @@ class AppProvider extends ChangeNotifier {
         print('Saved to Firestore with ID: $docId');
 
         // Save to community collection if sharing is enabled
+        print('🌍 [COMMUNITY] shareWithCommunity flag: $shareWithCommunity');
         if (shareWithCommunity) {
-          print('Sharing with community...');
+          print('🌍 [COMMUNITY] Sharing with community...');
           await _savePromptToCommunity(promptData);
-          print('Saved to community collection');
+          print('✅ [COMMUNITY] Saved to community collection');
         } else {
-          print('Not sharing with community (disabled by user)');
+          print('🚫 [COMMUNITY] Not sharing (disabled by user)');
         }
+
+        // Deduct 1 token from user
+        await _deductToken();
+        print('Token deducted');
 
         // Increment user's project count
         await _incrementUserProjectCount();
@@ -308,7 +333,7 @@ class AppProvider extends ChangeNotifier {
       return response;
     } catch (e) {
       print('Error generating prompt: $e');
-      throw e;
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -392,6 +417,41 @@ class AppProvider extends ChangeNotifier {
     }
 
     return processedData;
+  }
+
+  Future<void> _deductToken() async {
+    print('🪙 [TOKEN DEDUCTION] _deductToken() called');
+    print(
+      '🪙 [TOKEN DEDUCTION] Current local tokens BEFORE deduction: $_tokens',
+    );
+
+    if (!_authService.isLoggedIn) {
+      print('⚠️ [TOKEN DEDUCTION] User not logged in, skipping deduction');
+      return;
+    }
+
+    try {
+      final userId = _authService.currentUser!.uid;
+      print('👤 [TOKEN DEDUCTION] User ID: $userId');
+
+      final userRef = _firestore.collection('users').doc(userId);
+
+      print('🔄 [TOKEN DEDUCTION] Updating Firestore: decrementing by 1...');
+      // Deduct 1 token from Firestore
+      await userRef.update({'tokens': FieldValue.increment(-1)});
+      print('✅ [TOKEN DEDUCTION] Firestore updated successfully');
+
+      // Update local token count
+      final oldTokens = _tokens;
+      _tokens = _tokens - 1;
+      if (_tokens < 0) _tokens = 0;
+
+      print('🪙 [TOKEN DEDUCTION] Local tokens updated: $oldTokens → $_tokens');
+      print('✅ [TOKEN DEDUCTION] Token deduction complete!');
+    } catch (e) {
+      print('❌ [TOKEN DEDUCTION] Error deducting token: $e');
+      print('❌ [TOKEN DEDUCTION] Stack trace: ${StackTrace.current}');
+    }
   }
 
   Future<void> _incrementUserProjectCount() async {
@@ -525,13 +585,125 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> reloadTokens() async {
+    print('🔄 [RELOAD TOKENS] reloadTokens() called');
+
+    if (!_authService.isLoggedIn) {
+      print('⚠️ [RELOAD TOKENS] User not logged in');
+      return;
+    }
+
+    try {
+      print('🪙 [RELOAD TOKENS] Fetching tokens from Firestore...');
+      final tokens = await _authService.getUserTokens();
+      print('🪙 [RELOAD TOKENS] Tokens fetched: $tokens');
+
+      _tokens = tokens;
+      notifyListeners();
+
+      print('✅ [RELOAD TOKENS] Tokens reloaded successfully: $_tokens');
+    } catch (e) {
+      print('❌ [RELOAD TOKENS] Error reloading tokens: $e');
+    }
+  }
+
   void setTokens(int tokens) {
+    print('🪙 [SET TOKENS] setTokens() called');
+    print('🪙 [SET TOKENS] Old tokens: $_tokens → New tokens: $tokens');
     _tokens = tokens;
     notifyListeners();
+    print('✅ [SET TOKENS] Tokens updated and listeners notified');
   }
 
   void addTokens(int amount) {
+    print('🪙 [ADD TOKENS] addTokens() called with amount: $amount');
+    print(
+      '🪙 [ADD TOKENS] Old tokens: $_tokens → New tokens: ${_tokens + amount}',
+    );
     _tokens += amount;
     notifyListeners();
+    print('✅ [ADD TOKENS] Tokens updated and listeners notified');
+  }
+
+  // Save streaming result to history
+  Future<Map<String, bool>> saveStreamingResult(
+    PromptRequest request,
+    String fullText, {
+    bool shareWithCommunity = false,
+  }) async {
+    print('💾 [STREAMING SAVE] saveStreamingResult() called');
+
+    final result = {'saved': false, 'shared': false};
+
+    if (!_authService.isLoggedIn) {
+      print('⚠️ [STREAMING SAVE] User not logged in');
+      return result;
+    }
+
+    try {
+      // Create response object
+      final response = PromptResponse(
+        summary: fullText,
+        techStackExplanation: '',
+        features: [],
+        uiLayout: '',
+        folderStructure: '',
+      );
+
+      print('📝 [STREAMING SAVE] Created response object');
+
+      // Prepare data
+      final timestamp = DateTime.now().toIso8601String();
+      final promptData = {
+        'request': request.toJson(),
+        'response': response.toJson(),
+        'timestamp': timestamp,
+      };
+
+      print('📦 [STREAMING SAVE] Prepared prompt data');
+
+      // Save to Firestore
+      final userId = _authService.currentUser!.uid;
+      print('👤 [STREAMING SAVE] User ID: $userId');
+
+      final docRef = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('history')
+          .add(promptData);
+
+      print('✅ [STREAMING SAVE] Saved to Firestore with ID: ${docRef.id}');
+      result['saved'] = true;
+
+      // Deduct token
+      print('🪙 [STREAMING SAVE] Deducting token...');
+      await _deductToken();
+      print('✅ [STREAMING SAVE] Token deducted');
+
+      // Save to community if enabled
+      if (shareWithCommunity) {
+        print('🌍 [STREAMING SAVE] Sharing with community...');
+        await _savePromptToCommunity(promptData);
+        result['shared'] = true;
+        print('✅ [STREAMING SAVE] Shared with community');
+      } else {
+        print('🚫 [STREAMING SAVE] Community sharing disabled');
+      }
+
+      // Increment project count
+      print('📊 [STREAMING SAVE] Incrementing project count...');
+      await _incrementUserProjectCount();
+      print('✅ [STREAMING SAVE] Project count incremented');
+
+      // Reload history
+      await _loadPromptHistory();
+      print('🔄 [STREAMING SAVE] Reloaded history');
+
+      print('✅ [STREAMING SAVE] Save complete!');
+    } catch (e) {
+      print('❌ [STREAMING SAVE] Error: $e');
+    }
+
+    return result;
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
@@ -6,7 +8,7 @@ import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
 import 'main_screen.dart';
 import 'auth_screen.dart';
-import 'prompt_form_screen.dart';
+import 'api_key_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -99,21 +101,33 @@ class _SplashScreenState extends State<SplashScreen>
     final authService = context.read<AuthService>();
     final hasApiKey = context.read<AppProvider>().hasApiKey;
 
+    print('🔍 [SPLASH] Checking navigation...');
+    print('👤 [SPLASH] Is logged in: ${authService.isLoggedIn}');
+    print('🔑 [SPLASH] Has API key: $hasApiKey');
+
     // Check login status first
     if (!authService.isLoggedIn) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
-      );
+      print('🧭 [SPLASH] → Auth Screen (not logged in)');
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => AuthScreen()));
       return;
     }
 
     // If logged in, check for API key
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) =>
-            hasApiKey ? const MainScreen() : const PromptFormScreen(),
-      ),
-    );
+    if (!hasApiKey) {
+      print('🧭 [SPLASH] → API Key Screen (no API key)');
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => ApiKeyScreen()),
+      );
+      return;
+    }
+
+    // All good, go to home
+    print('🧭 [SPLASH] → Main Screen (all good)');
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (context) => MainScreen()));
   }
 
   @override

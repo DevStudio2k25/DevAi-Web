@@ -63,6 +63,32 @@ class _PublicHistoryScreenState extends State<PublicHistoryScreen> {
     }
   }
 
+  String _getFullText(PromptResponse response) {
+    return '''
+${response.summary}
+
+${response.techStackExplanation}
+
+${response.features.map((f) => '- $f').join('\n')}
+
+${response.uiLayout}
+
+${response.folderStructure}
+''';
+  }
+
+  int _getWordCount(String text) {
+    return text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .length;
+  }
+
+  int _getLineCount(String text) {
+    return text.split('\n').length;
+  }
+
   Map<String, dynamic> _processFirestoreData(Map<String, dynamic> data) {
     Map<String, dynamic> processedData = Map<String, dynamic>.from(data);
 
@@ -518,7 +544,7 @@ class _PublicHistoryScreenState extends State<PublicHistoryScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 12),
-                  // Tags and Stats
+                  // Tags
                   Row(
                     children: [
                       Container(
@@ -582,6 +608,56 @@ class _PublicHistoryScreenState extends State<PublicHistoryScreen> {
                       ),
                       const SizedBox(width: 4),
                       const Text('❤️', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Content Stats
+                  Row(
+                    children: [
+                      // Word Count
+                      Icon(
+                        Icons.text_fields_rounded,
+                        size: 14,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_getWordCount(_getFullText(response))} words',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Character Count
+                      Icon(
+                        Icons.abc_rounded,
+                        size: 14,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_getFullText(response).length} chars',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Line Count
+                      Icon(
+                        Icons.format_list_numbered_rounded,
+                        size: 14,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_getLineCount(_getFullText(response))} lines',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
                     ],
                   ),
                 ],

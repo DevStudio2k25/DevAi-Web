@@ -15,6 +15,7 @@ import 'screens/auth_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/promo_code_screen.dart';
 import 'services/gemini_service.dart';
+import 'services/gemini_streaming_service.dart';
 import 'services/storage_service.dart';
 import 'services/auth_service.dart';
 
@@ -41,14 +42,17 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final storageService = StorageService();
   final geminiService = GeminiService(storageService);
+  final geminiStreamingService = GeminiStreamingService(storageService);
   final authService = AuthService(prefs);
 
   await geminiService.initialize();
+  await geminiStreamingService.initialize();
 
   runApp(
     MultiProvider(
       providers: [
         Provider<AuthService>.value(value: authService),
+        Provider<GeminiStreamingService>.value(value: geminiStreamingService),
         ChangeNotifierProvider(
           create: (_) =>
               AppProvider(storageService, geminiService, prefs, authService),

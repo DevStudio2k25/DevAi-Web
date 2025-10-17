@@ -94,6 +94,7 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
         }
 
         // Save the API key if it's valid
+        if (!mounted) return;
         await context.read<AppProvider>().setApiKey(apiKey);
 
         // Show success message

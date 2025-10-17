@@ -48,6 +48,12 @@ app.*.map.json
 google-services.json
 GoogleService-Info.plist
 
+# Keystore & Signing
+key.properties
+*.jks
+*.keystore
+android/app/keystore
+
 # Platform specific directories to ignore
 /windows/
 /macos/

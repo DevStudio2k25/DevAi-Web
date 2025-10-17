@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:lottie/lottie.dart';
-import '../models/promo_code.dart';
 import '../providers/app_provider.dart';
 import '../widgets/loading_overlay.dart';
 import '../widgets/cached_network_image.dart';
@@ -265,241 +264,431 @@ class _PromoCodeScreenState extends State<PromoCodeScreen> {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Redeem Promo Code')),
-      body: LoadingOverlay(
-        isLoading: _isLoading,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // User Profile Card
-                if (_userData != null) ...[
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          // Profile Image and Basic Info
-                          Row(
-                            children: [
-                              // Profile Image
-                              CachedCircleAvatar(
-                                radius: 30,
-                                backgroundColor: colorScheme.primaryContainer,
-                                imageUrl: user?.photoURL,
-                                child: Icon(
-                                  Icons.person,
-                                  size: 30,
-                                  color: colorScheme.primary,
-                                ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colorScheme.primary.withValues(alpha: 0.05),
+              colorScheme.secondary.withValues(alpha: 0.05),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: LoadingOverlay(
+            isLoading: _isLoading,
+            child: CustomScrollView(
+              slivers: [
+                // Modern App Bar
+                SliverAppBar(
+                  floating: true,
+                  snap: true,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  title: Text(
+                    'Redeem Promo Code',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                // Content
+                SliverPadding(
+                  padding: const EdgeInsets.all(20),
+                  sliver: SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // User Profile Card
+                        if (_userData != null) ...[
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  colorScheme.primaryContainer,
+                                  colorScheme.secondaryContainer,
+                                ],
                               ),
-                              const SizedBox(width: 16),
-                              // Name and ID
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      user?.displayName ?? 'Anonymous User',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Row(
+                                children: [
+                                  // Profile Image with glow
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: colorScheme.primary.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                          blurRadius: 12,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: CachedCircleAvatar(
+                                      radius: 35,
+                                      backgroundColor: colorScheme.surface,
+                                      imageUrl: user?.photoURL,
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 35,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // Name and Tokens
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          user?.displayName ?? 'Anonymous User',
+                                          style: TextStyle(
+                                            fontSize: 18,
                                             fontWeight: FontWeight.bold,
-                                            color: colorScheme.onSurface,
+                                            color:
+                                                colorScheme.onPrimaryContainer,
                                           ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'ID: ${user?.uid ?? 'Not available'}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurface
-                                                .withOpacity(0.7),
-                                            fontFamily: 'JetBrainsMono',
-                                          ),
-                                    ),
-                                    if (_userData?['tokens'] != null) ...[
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: Lottie.asset(
-                                              'assets/lottie/DevAi.json',
-                                              fit: BoxFit.cover,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (_userData?['tokens'] != null)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: colorScheme.surface
+                                                  .withValues(alpha: 0.9),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: Lottie.asset(
+                                                    'assets/lottie/DevAi.json',
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  '${_userData?['tokens'] ?? 0}',
+                                                  style: TextStyle(
+                                                    color: colorScheme.primary,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Tokens',
+                                                  style: TextStyle(
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${_userData?['tokens'] ?? 0}',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                  color: colorScheme.primary,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Greeting Message
+                        if (user?.displayName != null) ...[
+                          RichText(
+                            text: TextSpan(
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                              children: [
+                                TextSpan(
+                                  text: 'Hey ',
+                                  style: TextStyle(color: colorScheme.primary),
+                                ),
+                                TextSpan(
+                                  text: user!.displayName!.split(' ')[0],
+                                ),
+                                const TextSpan(text: ' 👋'),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Ready to redeem your DevTokens?',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+
+                        // Promo Code Form
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Info Card with Animation
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: colorScheme.outline.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24.0),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(20),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              colorScheme.primaryContainer
+                                                  .withValues(alpha: 0.5),
+                                              colorScheme.secondaryContainer
+                                                  .withValues(alpha: 0.5),
+                                            ],
                                           ),
-                                        ],
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: SizedBox(
+                                          width: 80,
+                                          height: 80,
+                                          child: Lottie.asset(
+                                            'assets/lottie/DevAi.json',
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Text(
+                                        'Enter your promo code',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Get free tokens instantly!',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
                                     ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Error Message
+                              if (_errorMessage != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: colorScheme.error.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        color: colorScheme.error,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          _errorMessage!,
+                                          style: TextStyle(
+                                            color: colorScheme.error,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+
+                              // Promo Code Input
+                              TextFormField(
+                                controller: _codeController,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2,
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Promo Code',
+                                  labelStyle: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                  hintText: 'ENTER-CODE-HERE',
+                                  hintStyle: TextStyle(
+                                    color: colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.4),
+                                    letterSpacing: 2,
+                                  ),
+                                  prefixIcon: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: Lottie.asset(
+                                        'assets/lottie/DevAi.json',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.outline,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.outline.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.primary,
+                                      width: 2.5,
+                                    ),
+                                  ),
+                                  errorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.error,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  focusedErrorBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    borderSide: BorderSide(
+                                      color: colorScheme.error,
+                                      width: 2.5,
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: colorScheme.surface,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 18,
+                                  ),
+                                ),
+                                textCapitalization:
+                                    TextCapitalization.characters,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Please enter a promo code';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Submit Button
+                              FilledButton(
+                                onPressed: _isLoading ? null : _redeemPromoCode,
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 18,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  elevation: 8,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: Lottie.asset(
+                                        'assets/lottie/DevAi.json',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Redeem Code',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // Greeting Message
-                if (user?.displayName != null) ...[
-                  RichText(
-                    text: TextSpan(
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(color: colorScheme.onSurface),
-                      children: [
-                        TextSpan(
-                          text: 'Hey ',
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
                         ),
-                        TextSpan(
-                          text: '${user!.displayName!.split(' ')[0]}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const TextSpan(text: ' 👋'),
+                        const SizedBox(height: 100),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Ready to redeem your DevTokens?',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // Promo Code Form
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Info Card
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                width: 100,
-                                height: 100,
-                                child: Lottie.asset(
-                                  'assets/lottie/DevAi.json',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Enter your promo code to get free tokens!',
-                                style: Theme.of(context).textTheme.titleMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Error Message
-                      if (_errorMessage != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.errorContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: colorScheme.error,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _errorMessage!,
-                                  style: TextStyle(color: colorScheme.error),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-
-                      // Promo Code Input
-                      TextFormField(
-                        controller: _codeController,
-                        decoration: InputDecoration(
-                          labelText: 'Promo Code',
-                          hintText: 'Enter your promo code',
-                          prefixIcon: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: Lottie.asset(
-                                'assets/lottie/DevAi.json',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        textCapitalization: TextCapitalization.characters,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a promo code';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Submit Button
-                      FilledButton.icon(
-                        onPressed: _isLoading ? null : _redeemPromoCode,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.all(16),
-                        ),
-                        icon: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: Lottie.asset(
-                            'assets/lottie/DevAi.json',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        label: const Text('Redeem Code'),
-                      ),
-                    ],
                   ),
                 ),
               ],

@@ -1,4 +1,5 @@
-import 'dart:ui';
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -74,8 +75,10 @@ class _ChatResultScreenState extends State<ChatResultScreen> {
     try {
       print('Loading response from future');
       final response = await widget.responseFuture!;
-      print('Response loaded successfully: ${response.summary.substring(0, min(50, response.summary.length))}...');
-      
+      print(
+        'Response loaded successfully: ${response.summary.substring(0, min(50, response.summary.length))}...',
+      );
+
       setState(() {
         _response = response;
         _isLoading = false;
@@ -84,11 +87,11 @@ class _ChatResultScreenState extends State<ChatResultScreen> {
     } catch (e) {
       print('Error loading response in ChatResultScreen: $e');
       print('Error details: ${e.toString()}');
-      
+
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         // Show error dialog with more details
         showDialog(
@@ -140,7 +143,7 @@ class _ChatResultScreenState extends State<ChatResultScreen> {
   void _startTypingAnimation() {
     final fullText = _formatPrompt();
     const typingSpeed = Duration(
-      milliseconds: 10, // Fast typing speed
+      milliseconds: 1, // Double speed for history (was 10ms)
     );
     const chunkSize = 8; // Increased chunk size for smoother appearance
 
@@ -170,24 +173,71 @@ class _ChatResultScreenState extends State<ChatResultScreen> {
   String _formatPrompt() {
     if (_response == null) return '';
 
-    return '''
-# Project Description
-${_response!.summary}
+    final buffer = StringBuffer();
 
-# Pages/Screens
-${_response!.techStackExplanation}
+    // Always show Project Overview (summary)
+    buffer.writeln('# Project Overview');
+    buffer.writeln(_response!.summary);
+    buffer.writeln();
 
-# Key Features
-${_response!.features.map((f) => '- $f').join('\n')}
+    // Only show other sections if they have content
+    if (_response!.techStackExplanation.isNotEmpty) {
+      buffer.writeln('# Pages/Screens');
+      buffer.writeln(_response!.techStackExplanation);
+      buffer.writeln();
+    }
 
-# UI Design
-${_response!.uiLayout}
+    if (_response!.features.isNotEmpty) {
+      buffer.writeln('# Key Features');
+      buffer.writeln(_response!.features.map((f) => '- $f').join('\n'));
+      buffer.writeln();
+    }
 
-# Folder Structure
-```
-${_response!.folderStructure}
-```
-''';
+    if (_response!.uiLayout.isNotEmpty) {
+      buffer.writeln('# UI Design System');
+      buffer.writeln(_response!.uiLayout);
+      buffer.writeln();
+    }
+
+    if (_response!.folderStructure.isNotEmpty) {
+      buffer.writeln('# Architecture & Folder Structure');
+      buffer.writeln('```');
+      buffer.writeln(_response!.folderStructure);
+      buffer.writeln('```');
+      buffer.writeln();
+    }
+
+    if (_response!.recommendedPackages != null) {
+      buffer.writeln('# Recommended Packages');
+      buffer.writeln(_response!.recommendedPackages);
+      buffer.writeln();
+    }
+
+    if (_response!.nonFunctionalRequirements != null) {
+      buffer.writeln('# Non-Functional Requirements');
+      buffer.writeln(_response!.nonFunctionalRequirements);
+      buffer.writeln();
+    }
+
+    if (_response!.testingStrategy != null) {
+      buffer.writeln('# Testing Strategy');
+      buffer.writeln(_response!.testingStrategy);
+      buffer.writeln();
+    }
+
+    if (_response!.acceptanceCriteria != null) {
+      buffer.writeln('# Acceptance Criteria (MVP)');
+      buffer.writeln(_response!.acceptanceCriteria);
+      buffer.writeln();
+    }
+
+    if (_response!.developmentRoadmap != null) {
+      buffer.writeln('# Development Roadmap');
+      buffer.writeln(_response!.developmentRoadmap);
+      buffer.writeln();
+    }
+
+    return buffer.toString();
   }
 
   Future<void> _copyToClipboard() async {
@@ -211,184 +261,261 @@ ${_response!.folderStructure}
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(widget.projectName),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          if (!_isLoading && _response != null) ...[
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.copy, color: colorScheme.primary),
-                  onPressed: _copyToClipboard,
-                  tooltip: 'Copy to clipboard',
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.share, color: colorScheme.primary),
-                  onPressed: _sharePrompt,
-                  tooltip: 'Share prompt',
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              colorScheme.primary.withOpacity(0.8),
-              colorScheme.secondary.withOpacity(0.9),
+              colorScheme.primary.withValues(alpha: 0.05),
+              colorScheme.secondary.withValues(alpha: 0.05),
             ],
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ],
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // Modern App Bar
+              SliverAppBar(
+                floating: true,
+                snap: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  widget.projectName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
                   ),
-                  child: _isLoading
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 100,
-                                height: 100,
-                                child: Lottie.asset(
-                                  'assets/lottie/DevAi.json',
-                                  fit: BoxFit.cover,
+                ),
+                actions: [
+                  if (!_isLoading && _response != null) ...[
+                    IconButton(
+                      icon: Icon(
+                        Icons.copy_rounded,
+                        color: colorScheme.primary,
+                      ),
+                      onPressed: _copyToClipboard,
+                      tooltip: 'Copy to clipboard',
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.share_rounded,
+                        color: colorScheme.primary,
+                      ),
+                      onPressed: _sharePrompt,
+                      tooltip: 'Share',
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ],
+              ),
+              // Content
+              if (_isLoading)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                colorScheme.primaryContainer.withValues(
+                                  alpha: 0.5,
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Generating your project...',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontWeight: FontWeight.bold,
+                                colorScheme.secondaryContainer.withValues(
+                                  alpha: 0.5,
                                 ),
-                              ),
-                              const SizedBox(height: 16),
-                              const CircularProgressIndicator(),
-                            ],
+                              ],
+                            ),
+                            shape: BoxShape.circle,
                           ),
-                        )
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 40,
-                                    height: 40,
-                                    child: Lottie.asset(
-                                      'assets/lottie/DevAi.json',
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Dev AI',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          color: colorScheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                  if (_isTyping) ...[
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Generating...',
-                                      style: TextStyle(
-                                        fontStyle: FontStyle.italic,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Lottie.asset(
+                              'assets/lottie/DevAi.json',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Generating your project...',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'This may take a few moments',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        CircularProgressIndicator(color: colorScheme.primary),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.all(20),
+                  sliver: SliverToBoxAdapter(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Header
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  colorScheme.primaryContainer,
+                                  colorScheme.secondaryContainer,
                                 ],
                               ),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(24),
+                                topRight: Radius.circular(24),
+                              ),
                             ),
-                            const Divider(height: 1),
-                            Expanded(
-                              child: SingleChildScrollView(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  16,
-                                  16,
-                                  100,
-                                ), // Extra bottom padding
-                                physics: const BouncingScrollPhysics(),
-                                child: MarkdownBody(
-                                  data: _currentText,
-                                  styleSheet: MarkdownStyleSheet(
-                                    p: AppConstants.monoTextStyle.copyWith(
-                                      height: 1.5,
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: Lottie.asset(
+                                    'assets/lottie/DevAi.json',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'DevAi Generated',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onPrimaryContainer,
+                                        ),
+                                      ),
+                                      if (_isTyping)
+                                        Text(
+                                          'Generating...',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontStyle: FontStyle.italic,
+                                            color: colorScheme
+                                                .onPrimaryContainer
+                                                .withValues(alpha: 0.7),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Content
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: MarkdownBody(
+                              data: _currentText,
+                              styleSheet: MarkdownStyleSheet(
+                                p: TextStyle(
+                                  fontSize: 15,
+                                  height: 1.6,
+                                  color: colorScheme.onSurface,
+                                ),
+                                code: AppConstants.monoTextStyle.copyWith(
+                                  backgroundColor:
+                                      colorScheme.surfaceContainerHighest,
+                                  color: colorScheme.onSurface,
+                                  height: 1.5,
+                                ),
+                                codeblockDecoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: colorScheme.outline.withValues(
+                                      alpha: 0.3,
                                     ),
-                                    code: AppConstants.monoTextStyle.copyWith(
-                                      backgroundColor:
-                                          colorScheme.surfaceVariant,
-                                      height: 1.5,
-                                    ),
-                                    codeblockDecoration: BoxDecoration(
-                                      color: colorScheme.surfaceVariant,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    h1: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                codeblockPadding: const EdgeInsets.all(16),
+                                h1: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                  height: 2,
+                                ),
+                                h2: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                  height: 1.8,
+                                ),
+                                h3: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                  height: 1.6,
+                                ),
+                                listBullet: TextStyle(
+                                  color: colorScheme.primary,
+                                  height: 1.6,
+                                ),
+                                listIndent: 24,
+                                blockquote: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                blockquoteDecoration: BoxDecoration(
+                                  color: colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border(
+                                    left: BorderSide(
                                       color: colorScheme.primary,
-                                      height: 2,
-                                    ),
-                                    listBullet: TextStyle(
-                                      color: colorScheme.primary,
-                                      height: 1.5,
+                                      width: 4,
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              // Bottom spacing
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
           ),
         ),
       ),

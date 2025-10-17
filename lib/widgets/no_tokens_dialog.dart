@@ -18,8 +18,8 @@ class NoTokensDialog extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              colorScheme.primary.withOpacity(0.9),
-              colorScheme.secondary.withOpacity(0.9),
+              colorScheme.primary.withValues(alpha: 0.9),
+              colorScheme.secondary.withValues(alpha: 0.9),
             ],
           ),
           borderRadius: const BorderRadius.only(
@@ -30,7 +30,7 @@ class NoTokensDialog extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 15,
               spreadRadius: 5,
             ),
@@ -43,7 +43,7 @@ class NoTokensDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.surface.withOpacity(0.1),
+                color: colorScheme.surface.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: SizedBox(
@@ -71,7 +71,7 @@ class NoTokensDialog extends StatelessWidget {
               'You need at least 1 DevToken to generate a prompt.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: colorScheme.onPrimary.withOpacity(0.9),
+                color: colorScheme.onPrimary.withValues(alpha: 0.9),
                 fontSize: 16,
               ),
             ),
@@ -82,15 +82,18 @@ class NoTokensDialog extends StatelessWidget {
               children: [
                 _buildOption(
                   context,
-                  'Watch Videos',
-                  Icons.play_circle_outline,
-                  () => Navigator.pushReplacementNamed(context, '/youtube'),
+                  'Get Tokens',
+                  Icons.card_giftcard_rounded,
+                  () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pushNamed(context, '/promo-code');
+                  },
                 ),
                 const SizedBox(width: 16),
                 _buildOption(
                   context,
-                  'Wait 24h',
-                  Icons.timer_outlined,
+                  'Close',
+                  Icons.close_rounded,
                   () => Navigator.pop(context),
                 ),
               ],
@@ -116,20 +119,16 @@ class NoTokensDialog extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: colorScheme.surface.withOpacity(0.1),
+            color: colorScheme.surface.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: colorScheme.onPrimary.withOpacity(0.2),
+              color: colorScheme.onPrimary.withValues(alpha: 0.2),
               width: 1,
             ),
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: colorScheme.onPrimary,
-                size: 24,
-              ),
+              Icon(icon, color: colorScheme.onPrimary, size: 24),
               const SizedBox(height: 8),
               Text(
                 label,
@@ -145,4 +144,4 @@ class NoTokensDialog extends StatelessWidget {
       ),
     );
   }
-} 
+}

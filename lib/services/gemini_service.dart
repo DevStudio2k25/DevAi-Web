@@ -50,50 +50,113 @@ class GeminiService {
 
   String _buildPrompt(PromptRequest request) {
     return '''
-    As a creative UI/UX developer, provide a unique and detailed project specification for:
+    As an expert software architect and full-stack developer, generate a comprehensive, production-ready project specification for:
     
     Project Name: ${request.projectName}
     Project Topic: ${request.topic}
     Platform: ${request.platform}
     Tech Stack: ${request.techStack}
     
-    Please provide ONLY the following sections (use exact headings):
+    Provide a COMPLETE, STRUCTURED specification with these EXACT sections:
 
-    PROJECT DESCRIPTION:
-    Write a unique and detailed description of what this project "${request.projectName}" will do and its purpose (2-3 paragraphs). Make sure to use the project name throughout the description.
+    1. PROJECT OVERVIEW:
+    - Write 2-3 detailed paragraphs about "${request.projectName}"
+    - Include target audience, core problem it solves, and unique value proposition
+    - Mention MVP scope vs future enhancements
 
-    PAGES/SCREENS:
-    List all the pages/screens needed for ${request.projectName} with a brief purpose for each.
+    2. PAGES/SCREENS:
+    - List ALL screens/pages needed with detailed purpose
+    - Include navigation flow between screens
+    - Specify which screens are MVP vs Phase 2
 
-    KEY FEATURES:
-    List 5-8 specific and unique features ${request.projectName} will have. Be creative and detailed.
+    3. KEY FEATURES:
+    - List 8-12 features categorized as:
+      * Core Features (MVP)
+      * Advanced Features (Phase 2)
+      * AI-Powered Features (if applicable)
+    - Each feature should have 2-3 lines of detail
 
-    UI DESIGN:
-    - Describe the overall theme and style for ${request.projectName}
-    - Suggest a specific color palette (with hex codes)
-    - Describe layout patterns and components
-    - Mention specific animations or transitions
-    - Suggest typography and icon styles
+    4. UI DESIGN SYSTEM:
+    - Theme & Style (modern, minimalist, etc.)
+    - Color Palette with hex codes:
+      * Primary, Secondary, Accent colors
+      * Success, Warning, Error, Info colors
+      * Background, Surface, Text colors (light & dark mode)
+    - Typography:
+      * Heading fonts with sizes
+      * Body text fonts with sizes
+      * Monospace fonts for code
+    - Icons: Specify icon library
+    - Animations: List key animations and transitions
+    - Layout Patterns: Navigation style, card designs, etc.
 
-    FOLDER STRUCTURE:
-    Provide a detailed folder and file structure specific to this ${request.platform} project using ${request.techStack}. Include appropriate file names that reflect the project name "${request.projectName}".
+    5. ARCHITECTURE & FOLDER STRUCTURE:
+    - Recommend architecture pattern (Clean Architecture, Feature-first, MVVM, etc.)
+    - Suggest state management approach
+    - Provide COMPLETE folder structure with:
+      * All directories and subdirectories
+      * Key files with actual names
+      * Organized by feature/module
+      * Include test folders
 
-    Important:
-    - Be specific and unique to this exact project
-    - No generic responses
-    - No placeholder text
-    - Include actual color codes
-    - Make each section detailed and practical
-    - Use the project name "${request.projectName}" throughout the response
+    6. RECOMMENDED PACKAGES:
+    For ${request.techStack} on ${request.platform}, suggest packages for:
+    - State Management (primary + alternative)
+    - Routing/Navigation (primary + alternative)
+    - Local Storage (primary + alternative)
+    - HTTP/API Client (primary + alternative)
+    - Authentication (if needed)
+    - UI Components/Utilities
+    - Testing frameworks
+    Include 1-2 line reasoning for each
+
+    7. NON-FUNCTIONAL REQUIREMENTS:
+    - Performance: Target metrics (load time, frame rate, etc.)
+    - Offline Mode: Strategy for offline functionality
+    - Security: Data encryption, token handling, secure storage
+    - Accessibility: WCAG compliance, screen reader support
+    - Internationalization: Multi-language support approach
+    - Platform-Specific: Min SDK versions, browser support, etc.
+
+    8. TESTING STRATEGY:
+    - List 8-10 test cases covering:
+      * Unit tests (business logic)
+      * Widget/Component tests (UI)
+      * Integration tests (user flows)
+      * E2E tests (critical paths)
+    - Suggest test coverage goals (e.g., 80%+)
+    - Recommend CI/CD approach (GitHub Actions, etc.)
+
+    9. ACCEPTANCE CRITERIA (MVP):
+    - List 10-15 clear, testable criteria for MVP completion
+    - Each should be specific and measurable
+    - Prioritize by must-have vs nice-to-have
+
+    10. DEVELOPMENT ROADMAP:
+    - Phase 1 (MVP): 2-4 weeks
+    - Phase 2 (Advanced Features): 4-6 weeks
+    - Phase 3 (Polish & Scale): 2-3 weeks
+    - List key milestones for each phase
+
+    IMPORTANT RULES:
+    - Be SPECIFIC to "${request.projectName}" - no generic responses
+    - Include ACTUAL values (hex codes, package names, versions)
+    - Make it DEVELOPER-READY - someone should be able to start coding immediately
+    - Use the project name "${request.projectName}" throughout
+    - Provide PRACTICAL, PRODUCTION-READY recommendations
+    - Consider real-world constraints (performance, security, scalability)
     ''';
   }
 
   String _extractSection(List<String> sections, String sectionName) {
     try {
-      // Find the section header first
+      // Find the section header first (supports numbered sections like "1. PROJECT OVERVIEW")
       int headerIndex = -1;
       for (int i = 0; i < sections.length; i++) {
-        if (sections[i].toLowerCase().contains(sectionName.toLowerCase())) {
+        final section = sections[i].toLowerCase();
+        // Remove numbers and special characters for matching
+        final cleanSection = section.replaceAll(RegExp(r'^\d+\.\s*'), '');
+        if (cleanSection.contains(sectionName.toLowerCase())) {
           headerIndex = i;
           break;
         }
@@ -103,15 +166,15 @@ class GeminiService {
         return ''; // Header not found or it's the last section
       }
 
-      // Collect all content until the next section header
+      // Collect all content until the next numbered section header
       List<String> contentSections = [];
       int i = headerIndex + 1;
-      while (i < sections.length &&
-          !sections[i].toLowerCase().contains("project description") &&
-          !sections[i].toLowerCase().contains("pages/screens") &&
-          !sections[i].toLowerCase().contains("key features") &&
-          !sections[i].toLowerCase().contains("ui design") &&
-          !sections[i].toLowerCase().contains("folder structure")) {
+      while (i < sections.length) {
+        final section = sections[i].trim();
+        // Check if this is a new numbered section (e.g., "2. PAGES/SCREENS")
+        if (RegExp(r'^\d+\.\s+[A-Z]').hasMatch(section)) {
+          break;
+        }
         contentSections.add(sections[i]);
         i++;
       }
@@ -160,26 +223,42 @@ class GeminiService {
       // Split response into sections by double newlines
       final sections = text.split(RegExp(r'\n{2,}'));
 
-      final projectDesc = _extractSection(sections, "PROJECT DESCRIPTION");
-      final pages = _extractSection(sections, "PAGES/SCREENS");
+      // Extract all sections
+      final projectOverview = _extractSection(sections, "PROJECT OVERVIEW");
+      final pagesScreens = _extractSection(sections, "PAGES/SCREENS");
       final features = _extractListSection(sections, "KEY FEATURES");
-      final uiDesign = _extractSection(sections, "UI DESIGN");
-      final structure = _extractSection(sections, "FOLDER STRUCTURE");
+      final uiDesign = _extractSection(sections, "UI DESIGN SYSTEM");
+      final architecture = _extractSection(sections, "ARCHITECTURE");
+      final packages = _extractSection(sections, "RECOMMENDED PACKAGES");
+      final nonFunctional = _extractSection(
+        sections,
+        "NON-FUNCTIONAL REQUIREMENTS",
+      );
+      final testing = _extractSection(sections, "TESTING STRATEGY");
+      final acceptance = _extractSection(sections, "ACCEPTANCE CRITERIA");
+      final roadmap = _extractSection(sections, "DEVELOPMENT ROADMAP");
 
       return PromptResponse(
-        summary: projectDesc.isNotEmpty
-            ? projectDesc
-            : "No project description available",
+        summary: projectOverview.isNotEmpty
+            ? projectOverview
+            : "No project overview available",
         features: features.isNotEmpty ? features : ["No features available"],
         uiLayout: uiDesign.isNotEmpty ? uiDesign : "No UI design available",
-        techStackExplanation: pages.isNotEmpty
-            ? pages
+        techStackExplanation: pagesScreens.isNotEmpty
+            ? pagesScreens
             : "No pages/screens available",
-        folderStructure: structure.isNotEmpty
-            ? structure
-            : "No folder structure available",
-        developmentSteps: [], // Empty since we don't want development steps
-        aiIntegration: null, // Null since we don't want AI integration
+        folderStructure: architecture.isNotEmpty
+            ? architecture
+            : "No architecture details available",
+        recommendedPackages: packages.isNotEmpty ? packages : null,
+        nonFunctionalRequirements: nonFunctional.isNotEmpty
+            ? nonFunctional
+            : null,
+        testingStrategy: testing.isNotEmpty ? testing : null,
+        acceptanceCriteria: acceptance.isNotEmpty ? acceptance : null,
+        developmentRoadmap: roadmap.isNotEmpty ? roadmap : null,
+        developmentSteps: [],
+        aiIntegration: null,
       );
     } catch (e) {
       // More descriptive error message

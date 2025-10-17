@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/prompt_form_screen.dart';
+import 'prompt_form/prompt_form_screen.dart';
 
 class ProjectIdeasScreen extends StatefulWidget {
   const ProjectIdeasScreen({super.key});
@@ -19,8 +19,18 @@ class _ProjectIdeasScreenState extends State<ProjectIdeasScreen> {
     'IoT',
     'Cloud',
     'Mobile',
+    'Web',
     'Web3',
     'AR/VR',
+    'E-commerce',
+    'Social',
+    'Productivity',
+    'Gaming',
+    'Entertainment',
+    'Education',
+    'Health',
+    'Finance',
+    'Utility',
   ];
 
   final List<Map<String, dynamic>> _projects = [
@@ -174,6 +184,500 @@ class _ProjectIdeasScreenState extends State<ProjectIdeasScreen> {
       'name': 'Cloud Gaming Platform',
       'description': 'Stream AAA games from cloud servers',
       'tags': ['Cloud'],
+    },
+    // Normal Web & Mobile Apps
+    {
+      'name': 'Recipe Sharing Platform',
+      'description': 'Social platform for sharing and discovering recipes',
+      'tags': ['Web', 'Social'],
+    },
+    {
+      'name': 'Expense Tracker App',
+      'description': 'Personal finance management with budget tracking',
+      'tags': ['Mobile', 'Productivity'],
+    },
+    {
+      'name': 'Online Bookstore',
+      'description': 'E-commerce platform for buying and selling books',
+      'tags': ['Web', 'E-commerce'],
+    },
+    {
+      'name': 'Fitness Tracker',
+      'description': 'Track workouts, calories, and fitness goals',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Blog Platform',
+      'description': 'Simple blogging platform with markdown support',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Todo List App',
+      'description': 'Task management with categories and reminders',
+      'tags': ['Mobile', 'Productivity'],
+    },
+    {
+      'name': 'Weather App',
+      'description': 'Real-time weather forecasts and alerts',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Restaurant Finder',
+      'description': 'Discover nearby restaurants with reviews and ratings',
+      'tags': ['Mobile', 'Web'],
+    },
+    {
+      'name': 'Portfolio Website',
+      'description': 'Personal portfolio showcase for developers/designers',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Chat Application',
+      'description': 'Real-time messaging with group chats',
+      'tags': ['Mobile', 'Web', 'Social'],
+    },
+    {
+      'name': 'E-learning Platform',
+      'description': 'Online courses with video lessons and quizzes',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Music Player',
+      'description': 'Local music player with playlists and equalizer',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Job Board',
+      'description': 'Job listing platform with application tracking',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Note Taking App',
+      'description': 'Simple notes with tags and search functionality',
+      'tags': ['Mobile', 'Productivity'],
+    },
+    {
+      'name': 'Event Management System',
+      'description': 'Create and manage events with RSVP tracking',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Photo Gallery App',
+      'description': 'Organize and share photos with albums',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Online Quiz Platform',
+      'description': 'Create and take quizzes with scoring system',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Habit Tracker',
+      'description': 'Build good habits with daily tracking and streaks',
+      'tags': ['Mobile', 'Productivity'],
+    },
+    {
+      'name': 'Food Delivery App',
+      'description': 'Order food from local restaurants',
+      'tags': ['Mobile', 'E-commerce'],
+    },
+    {
+      'name': 'News Aggregator',
+      'description': 'Curated news from multiple sources',
+      'tags': ['Web', 'Mobile'],
+    },
+    {
+      'name': 'Appointment Booking System',
+      'description': 'Schedule appointments for services and consultations',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Flashcard Study App',
+      'description': 'Create and study flashcards for learning',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Real Estate Listing',
+      'description': 'Property listings with search and filters',
+      'tags': ['Web', 'E-commerce'],
+    },
+    {
+      'name': 'Meditation Timer',
+      'description': 'Guided meditation with ambient sounds',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Invoice Generator',
+      'description': 'Create and manage professional invoices',
+      'tags': ['Web', 'Productivity'],
+    },
+    {
+      'name': 'Movie Review Platform',
+      'description': 'Rate and review movies with recommendations',
+      'tags': ['Web', 'Social'],
+    },
+    {
+      'name': 'Parking Finder App',
+      'description': 'Find and book parking spots nearby',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'URL Shortener',
+      'description': 'Shorten URLs with analytics tracking',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Grocery Shopping List',
+      'description': 'Shared shopping lists with family members',
+      'tags': ['Mobile', 'Productivity'],
+    },
+    {
+      'name': 'Travel Planner',
+      'description': 'Plan trips with itinerary and budget tracking',
+      'tags': ['Web', 'Mobile'],
+    },
+    {
+      'name': 'Podcast Player',
+      'description': 'Stream and download podcasts',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Customer Support Portal',
+      'description': 'Ticket management system for customer support',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'QR Code Generator',
+      'description': 'Generate and scan QR codes',
+      'tags': ['Mobile', 'Web'],
+    },
+    {
+      'name': 'Language Learning App',
+      'description': 'Learn languages with vocabulary and exercises',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Inventory Management',
+      'description': 'Track stock and manage warehouse inventory',
+      'tags': ['Web'],
+    },
+    {
+      'name': 'Calorie Counter',
+      'description': 'Track daily food intake and nutrition',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Forum Community',
+      'description': 'Discussion forum with threads and categories',
+      'tags': ['Web', 'Social'],
+    },
+    {
+      'name': 'Password Manager',
+      'description': 'Securely store and manage passwords',
+      'tags': ['Mobile', 'Web'],
+    },
+    {
+      'name': 'Pet Care Tracker',
+      'description': 'Track pet health, vet visits, and feeding schedule',
+      'tags': ['Mobile'],
+    },
+    {
+      'name': 'Donation Platform',
+      'description': 'Crowdfunding and donation management system',
+      'tags': ['Web'],
+    },
+    // Gaming & Entertainment
+    {
+      'name': 'Tic Tac Toe Game',
+      'description': 'Classic tic-tac-toe with AI opponent',
+      'tags': ['Gaming', 'Mobile'],
+    },
+    {
+      'name': 'Memory Card Game',
+      'description': 'Match pairs of cards with different difficulty levels',
+      'tags': ['Gaming', 'Mobile'],
+    },
+    {
+      'name': 'Quiz Game App',
+      'description': 'Trivia quiz game with multiple categories',
+      'tags': ['Gaming', 'Entertainment'],
+    },
+    {
+      'name': 'Snake Game',
+      'description': 'Classic snake game with leaderboard',
+      'tags': ['Gaming', 'Mobile'],
+    },
+    {
+      'name': 'Sudoku Puzzle',
+      'description': 'Sudoku game with hints and difficulty levels',
+      'tags': ['Gaming', 'Mobile'],
+    },
+    {
+      'name': 'Chess Game',
+      'description': 'Play chess online with friends or AI',
+      'tags': ['Gaming', 'Web'],
+    },
+    {
+      'name': 'Meme Generator',
+      'description': 'Create and share custom memes',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'GIF Maker',
+      'description': 'Convert videos to GIFs with editing tools',
+      'tags': ['Entertainment', 'Utility'],
+    },
+    {
+      'name': 'Karaoke App',
+      'description': 'Sing along with lyrics and record performances',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Joke & Quotes App',
+      'description': 'Daily jokes and inspirational quotes',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    // Education & Learning
+    {
+      'name': 'Dictionary App',
+      'description': 'Offline dictionary with pronunciation and examples',
+      'tags': ['Education', 'Mobile'],
+    },
+    {
+      'name': 'Math Practice App',
+      'description': 'Practice math problems with step-by-step solutions',
+      'tags': ['Education', 'Mobile'],
+    },
+    {
+      'name': 'Typing Speed Test',
+      'description': 'Improve typing speed with practice tests',
+      'tags': ['Education', 'Web'],
+    },
+    {
+      'name': 'Periodic Table App',
+      'description': 'Interactive periodic table with element details',
+      'tags': ['Education', 'Mobile'],
+    },
+    {
+      'name': 'Code Snippet Manager',
+      'description': 'Save and organize code snippets',
+      'tags': ['Productivity', 'Web'],
+    },
+    {
+      'name': 'Study Timer (Pomodoro)',
+      'description': 'Pomodoro technique timer for focused study',
+      'tags': ['Education', 'Productivity'],
+    },
+    {
+      'name': 'Whiteboard App',
+      'description': 'Digital whiteboard for drawing and collaboration',
+      'tags': ['Education', 'Web'],
+    },
+    // Health & Fitness
+    {
+      'name': 'Water Reminder',
+      'description': 'Track daily water intake with reminders',
+      'tags': ['Health', 'Mobile'],
+    },
+    {
+      'name': 'BMI Calculator',
+      'description': 'Calculate BMI and get health recommendations',
+      'tags': ['Health', 'Mobile'],
+    },
+    {
+      'name': 'Yoga Pose Guide',
+      'description': 'Learn yoga poses with instructions and benefits',
+      'tags': ['Health', 'Mobile'],
+    },
+    {
+      'name': 'Sleep Tracker',
+      'description': 'Monitor sleep patterns and quality',
+      'tags': ['Health', 'Mobile'],
+    },
+    {
+      'name': 'Meal Planner',
+      'description': 'Plan weekly meals with grocery list generation',
+      'tags': ['Health', 'Productivity'],
+    },
+    {
+      'name': 'Step Counter',
+      'description': 'Track daily steps and walking distance',
+      'tags': ['Health', 'Mobile'],
+    },
+    // Finance & Business
+    {
+      'name': 'Budget Planner',
+      'description': 'Monthly budget planning with expense categories',
+      'tags': ['Finance', 'Productivity'],
+    },
+    {
+      'name': 'Tip Calculator',
+      'description': 'Calculate tips and split bills easily',
+      'tags': ['Finance', 'Utility'],
+    },
+    {
+      'name': 'Currency Converter',
+      'description': 'Real-time currency exchange rates',
+      'tags': ['Finance', 'Utility'],
+    },
+    {
+      'name': 'Stock Portfolio Tracker',
+      'description': 'Track stock investments and portfolio performance',
+      'tags': ['Finance', 'Web'],
+    },
+    {
+      'name': 'Loan Calculator',
+      'description': 'Calculate EMI and loan repayment schedules',
+      'tags': ['Finance', 'Utility'],
+    },
+    {
+      'name': 'Receipt Scanner',
+      'description': 'Scan and organize receipts for expense tracking',
+      'tags': ['Finance', 'Mobile'],
+    },
+    // Utility & Tools
+    {
+      'name': 'Unit Converter',
+      'description': 'Convert between different units of measurement',
+      'tags': ['Utility', 'Mobile'],
+    },
+    {
+      'name': 'Color Picker Tool',
+      'description': 'Pick colors from images and generate palettes',
+      'tags': ['Utility', 'Web'],
+    },
+    {
+      'name': 'File Converter',
+      'description': 'Convert files between different formats',
+      'tags': ['Utility', 'Web'],
+    },
+    {
+      'name': 'Barcode Scanner',
+      'description': 'Scan barcodes and get product information',
+      'tags': ['Utility', 'Mobile'],
+    },
+    {
+      'name': 'Countdown Timer',
+      'description': 'Create countdowns for important events',
+      'tags': ['Utility', 'Mobile'],
+    },
+    {
+      'name': 'Random Name Generator',
+      'description': 'Generate random names for projects or characters',
+      'tags': ['Utility', 'Web'],
+    },
+    {
+      'name': 'Text to Speech',
+      'description': 'Convert text to natural sounding speech',
+      'tags': ['Utility', 'Mobile'],
+    },
+    {
+      'name': 'Image Compressor',
+      'description': 'Compress images without losing quality',
+      'tags': ['Utility', 'Web'],
+    },
+    {
+      'name': 'PDF Reader',
+      'description': 'Read and annotate PDF documents',
+      'tags': ['Utility', 'Mobile'],
+    },
+    {
+      'name': 'Markdown Editor',
+      'description': 'Write and preview markdown documents',
+      'tags': ['Productivity', 'Web'],
+    },
+    // Social & Communication
+    {
+      'name': 'Anonymous Feedback App',
+      'description': 'Collect anonymous feedback and suggestions',
+      'tags': ['Social', 'Web'],
+    },
+    {
+      'name': 'Birthday Reminder',
+      'description': 'Never forget birthdays with smart reminders',
+      'tags': ['Social', 'Mobile'],
+    },
+    {
+      'name': 'Group Poll App',
+      'description': 'Create polls and surveys for group decisions',
+      'tags': ['Social', 'Web'],
+    },
+    {
+      'name': 'Contact Manager',
+      'description': 'Organize contacts with notes and tags',
+      'tags': ['Productivity', 'Mobile'],
+    },
+    {
+      'name': 'Video Call App',
+      'description': 'Simple video calling with screen sharing',
+      'tags': ['Social', 'Web'],
+    },
+    // Creative & Design
+    {
+      'name': 'Drawing App',
+      'description': 'Digital drawing with brushes and layers',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Logo Maker',
+      'description': 'Create simple logos with templates',
+      'tags': ['Utility', 'Web'],
+    },
+    {
+      'name': 'Collage Maker',
+      'description': 'Create photo collages with layouts',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Wallpaper App',
+      'description': 'Browse and download HD wallpapers',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Icon Generator',
+      'description': 'Generate app icons in multiple sizes',
+      'tags': ['Utility', 'Web'],
+    },
+    // Lifestyle & Personal
+    {
+      'name': 'Diary App',
+      'description': 'Private digital diary with mood tracking',
+      'tags': ['Productivity', 'Mobile'],
+    },
+    {
+      'name': 'Dream Journal',
+      'description': 'Record and analyze your dreams',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Gratitude Journal',
+      'description': 'Daily gratitude practice with prompts',
+      'tags': ['Health', 'Mobile'],
+    },
+    {
+      'name': 'Book Reading Tracker',
+      'description': 'Track books read with reviews and ratings',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Movie Watchlist',
+      'description': 'Keep track of movies to watch',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Plant Care Reminder',
+      'description': 'Watering schedule and plant care tips',
+      'tags': ['Utility', 'Mobile'],
+    },
+    {
+      'name': 'Outfit Planner',
+      'description': 'Plan daily outfits with virtual wardrobe',
+      'tags': ['Entertainment', 'Mobile'],
+    },
+    {
+      'name': 'Gift Idea Tracker',
+      'description': 'Save gift ideas for friends and family',
+      'tags': ['Productivity', 'Mobile'],
     },
   ];
 

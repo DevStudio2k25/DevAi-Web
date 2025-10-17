@@ -1,5 +1,10 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/prompt_request.dart';
 import '../models/prompt_response.dart';
 import '../providers/app_provider.dart';
@@ -356,6 +361,73 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                // Stats and Download Button
+                Row(
+                  children: [
+                    // Word Count
+                    Icon(
+                      Icons.text_fields_rounded,
+                      size: 14,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_getWordCount(_getFullText(response))} words',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Character Count
+                    Icon(
+                      Icons.abc_rounded,
+                      size: 14,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_getFullText(response).length} chars',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Line Count
+                    Icon(
+                      Icons.format_list_numbered_rounded,
+                      size: 14,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_getLineCount(_getFullText(response))} lines',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const Spacer(),
+                    // Download Button
+                    IconButton(
+                      onPressed: () =>
+                          _downloadAsTextFile(context, request, response),
+                      icon: Icon(
+                        Icons.download_rounded,
+                        size: 20,
+                        color: colorScheme.primary,
+                      ),
+                      tooltip: 'Download as .txt',
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      style: IconButton.styleFrom(
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -379,6 +451,121 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return '${difference.inDays}d ago';
     } else {
       return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  String _getFullText(PromptResponse response) {
+    return '''
+${response.summary}
+
+${response.techStackExplanation}
+
+${response.features.map((f) => '- $f').join('\n')}
+
+${response.uiLayout}
+
+${response.folderStructure}
+''';
+  }
+
+  int _getWordCount(String text) {
+    return text
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .length;
+  }
+
+  int _getLineCount(String text) {
+    return text.split('\n').length;
+  }
+
+  Future<void> _downloadAsTextFile(
+    BuildContext context,
+    PromptRequest request,
+    PromptResponse response,
+  ) async {
+    try {
+      print('📥 [DOWNLOAD] Starting download...');
+
+      final fullText =
+          '''
+PROJECT: ${request.projectName}
+PLATFORM: ${request.platform}
+TECH STACK: ${request.techStack}
+DESCRIPTION: ${request.topic}
+
+═══════════════════════════════════════════════════════════
+
+PROJECT DESCRIPTION:
+${response.summary}
+
+═══════════════════════════════════════════════════════════
+
+PAGES/SCREENS:
+${response.techStackExplanation}
+
+═══════════════════════════════════════════════════════════
+
+KEY FEATURES:
+${response.features.map((f) => '- $f').join('\n')}
+
+═══════════════════════════════════════════════════════════
+
+UI DESIGN:
+${response.uiLayout}
+
+═══════════════════════════════════════════════════════════
+
+FOLDER STRUCTURE:
+${response.folderStructure}
+
+═══════════════════════════════════════════════════════════
+
+Generated by DevAi
+''';
+
+      // Get temporary directory
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          '${request.projectName.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.txt';
+      final filePath = '${directory.path}/$fileName';
+
+      print('📝 [DOWNLOAD] Writing to file: $filePath');
+
+      // Write to file
+      final file = File(filePath);
+      await file.writeAsString(fullText);
+
+      print('✅ [DOWNLOAD] File written successfully');
+
+      // Share the file
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'DevAi - ${request.projectName}',
+        text: 'Project details generated by DevAi',
+      );
+
+      print('✅ [DOWNLOAD] File shared successfully');
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('File ready to save!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ [DOWNLOAD] Error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error downloading file: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     }
   }
 }

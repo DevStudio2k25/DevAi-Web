@@ -1,3 +1,4 @@
+import 'dart:math' show pi;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../widgets/cached_network_image.dart';
@@ -9,17 +10,29 @@ class AllUsersScreen extends StatefulWidget {
   State<AllUsersScreen> createState() => _AllUsersScreenState();
 }
 
-class _AllUsersScreenState extends State<AllUsersScreen> {
+class _AllUsersScreenState extends State<AllUsersScreen>
+    with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _allUsers = [];
   bool _isLoading = true;
   String _errorMessage = '';
   String _searchQuery = '';
   int? _expandedIndex;
+  late AnimationController _glowController;
 
   @override
   void initState() {
     super.initState();
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
     _fetchAllUsers();
+  }
+
+  @override
+  void dispose() {
+    _glowController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchAllUsers() async {
@@ -213,7 +226,6 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final isTopThree = rank < 3;
-    final isTopFour = rank < 4;
     final rankColor = _getRankColor(rank);
     final isExpanded = _expandedIndex == rank;
 
@@ -223,12 +235,12 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isTopFour
+          color: isTopThree
               ? rankColor.withValues(alpha: 0.3)
               : colorScheme.outline.withValues(alpha: 0.2),
-          width: isTopFour ? 2 : 1,
+          width: isTopThree ? 2 : 1,
         ),
-        boxShadow: isTopFour
+        boxShadow: isTopThree
             ? [
                 BoxShadow(
                   color: rankColor.withValues(alpha: 0.2),
@@ -258,7 +270,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: isTopFour
+                      color: isTopThree
                           ? rankColor.withValues(alpha: 0.2)
                           : colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
@@ -269,24 +281,18 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isTopFour ? rankColor : colorScheme.onSurface,
+                          color: isTopThree ? rankColor : colorScheme.onSurface,
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // User Avatar
-                  CachedCircleAvatar(
-                    radius: 28,
-                    imageUrl: user['photoURL'],
-                    backgroundColor: colorScheme.primaryContainer,
-                    child: Text(
-                      user['displayName'][0].toUpperCase(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
+                  // User Avatar with animated ring for top 3
+                  _buildUserAvatar(
+                    context,
+                    user: user,
+                    rank: rank + 1,
+                    colorScheme: colorScheme,
                   ),
                   const SizedBox(width: 12),
                   // User Info
@@ -314,8 +320,8 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                       ],
                     ),
                   ),
-                  // Badge for top 4
-                  if (isTopFour)
+                  // Badge for top 3
+                  if (isTopThree)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -428,6 +434,138 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildUserAvatar(
+    BuildContext context, {
+    required Map<String, dynamic> user,
+    required int rank,
+    required ColorScheme colorScheme,
+  }) {
+    // Show animated ring for top 3
+    if (rank <= 3) {
+      // Get multi-color gradient based on rank
+      List<Color> colors;
+      List<double> stops;
+
+      switch (rank) {
+        case 1: // #1 - Rainbow (7 colors)
+          colors = [
+            const Color(0xFFFF0000), // Red
+            const Color(0xFFFF7F00), // Orange
+            const Color(0xFFFFFF00), // Yellow
+            const Color(0xFF00FF00), // Green
+            const Color(0xFF0000FF), // Blue
+            const Color(0xFF4B0082), // Indigo
+            const Color(0xFF9400D3), // Violet
+            const Color(0xFFFF0000), // Red (loop)
+          ];
+          stops = [0.0, 0.14, 0.28, 0.42, 0.56, 0.70, 0.84, 1.0];
+          break;
+
+        case 2: // #2 - Purple/Magenta (4 colors) - Contrasts with gold card
+          colors = [
+            const Color(0xFFE91E63), // Pink
+            const Color(0xFF9C27B0), // Purple
+            const Color(0xFFBA68C8), // Light Purple
+            const Color(0xFFAB47BC), // Medium Purple
+            const Color(0xFFE91E63), // Pink (loop)
+          ];
+          stops = [0.0, 0.25, 0.5, 0.75, 1.0];
+          break;
+
+        case 3: // #3 - Teal/Cyan (2 colors) - Contrasts with silver card
+          colors = [
+            const Color(0xFF00BCD4), // Cyan
+            const Color(0xFF00ACC1), // Dark Cyan
+            const Color(0xFF00BCD4), // Cyan (loop)
+          ];
+          stops = [0.0, 0.5, 1.0];
+          break;
+
+        default:
+          colors = [colorScheme.primary];
+          stops = [1.0];
+      }
+
+      return AnimatedBuilder(
+        animation: _glowController,
+        builder: (context, child) {
+          return Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                // Outer glow
+                BoxShadow(
+                  color: colors[0].withValues(alpha: 0.6),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+                // Inner glow
+                BoxShadow(
+                  color: colors[colors.length ~/ 2].withValues(alpha: 0.4),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: SweepGradient(
+                  colors: colors,
+                  stops: stops,
+                  transform: GradientRotation(_glowController.value * 2 * pi),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: CachedCircleAvatar(
+                      radius: 25,
+                      imageUrl: user['photoURL'],
+                      backgroundColor: colorScheme.primaryContainer,
+                      child: Text(
+                        user['displayName'][0].toUpperCase(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
+
+    // Regular avatar without animation
+    return CachedCircleAvatar(
+      radius: 28,
+      imageUrl: user['photoURL'],
+      backgroundColor: colorScheme.primaryContainer,
+      child: Text(
+        user['displayName'][0].toUpperCase(),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      ),
     );
   }
 }

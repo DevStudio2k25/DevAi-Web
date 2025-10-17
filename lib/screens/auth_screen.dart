@@ -49,8 +49,8 @@ class _AuthScreenState extends State<AuthScreen> {
       final credential = await authService.signInWithGoogle();
 
       if (credential != null) {
-        // Check if the context is still valid
-        if (!context.mounted) return;
+        // Check if the widget is still mounted
+        if (!mounted) return;
 
         // Check if API key exists and navigate accordingly
         final hasApiKey = context.read<AppProvider>().hasApiKey;
@@ -62,12 +62,14 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } catch (e) {
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       // Check if this is a device binding error
       if (e.toString().contains('device is already bound')) {
         // Load the bound email
         await _loadBoundEmail();
+
+        if (!mounted) return;
 
         setState(() {
           if (_boundEmail != null) {
@@ -79,6 +81,8 @@ class _AuthScreenState extends State<AuthScreen> {
           }
         });
       } else {
+        if (!mounted) return;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to authenticate: ${e.toString()}'),
