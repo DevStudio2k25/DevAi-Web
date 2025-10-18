@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/prompt_request.dart';
 import '../models/prompt_response.dart';
 import '../services/gemini_service.dart';
+import '../services/gemini_streaming_service.dart';
 import '../services/storage_service.dart';
 import '../services/auth_service.dart';
 
@@ -14,6 +15,7 @@ class AppProvider extends ChangeNotifier {
   // ignore: unused_field
   final StorageService _storageService;
   final GeminiService _geminiService;
+  late final GeminiStreamingService _geminiStreamingService;
   final SharedPreferences _prefs;
   final AuthService _authService;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,6 +26,7 @@ class AppProvider extends ChangeNotifier {
   int _tokens = 0;
   List<Map<String, dynamic>> _promptHistory = [];
   ThemeMode _themeMode = ThemeMode.system;
+  String _themeStyle = 'windows11'; // 'classic' or 'windows11'
 
   AppProvider(
     this._storageService,
@@ -31,6 +34,7 @@ class AppProvider extends ChangeNotifier {
     this._prefs,
     this._authService,
   ) {
+    _geminiStreamingService = GeminiStreamingService(_storageService);
     _loadInitialData();
   }
 
@@ -38,8 +42,10 @@ class AppProvider extends ChangeNotifier {
   bool get hasApiKey => _hasApiKey;
   int get tokens => _tokens;
   GeminiService get geminiService => _geminiService;
+  GeminiStreamingService get geminiStreamingService => _geminiStreamingService;
   List<Map<String, dynamic>> get promptHistory => _promptHistory;
   ThemeMode get themeMode => _themeMode;
+  String get themeStyle => _themeStyle;
 
   Future<void> _loadInitialData() async {
     print('🔵 [INIT] _loadInitialData() called');
@@ -79,6 +85,15 @@ class AppProvider extends ChangeNotifier {
       (mode) => mode.toString() == 'ThemeMode.$themeModeString',
       orElse: () => ThemeMode.system,
     );
+
+    // Load theme style
+    _themeStyle = _prefs.getString('themeStyle') ?? 'windows11';
+  }
+
+  Future<void> setThemeStyle(String style) async {
+    _themeStyle = style;
+    await _prefs.setString('themeStyle', style);
+    notifyListeners();
   }
 
   void _loadPromptHistoryFromPrefs() {

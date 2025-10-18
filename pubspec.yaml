@@ -55,6 +55,9 @@ dependencies:
   # Gemini AI
   google_generative_ai: ^0.2.0
   card_swiper: ^3.0.1
+  
+  # Color Picker
+  flex_color_picker: ^3.5.1
 
   # Firebase
   firebase_core: ^2.24.2

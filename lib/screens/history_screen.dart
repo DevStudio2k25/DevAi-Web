@@ -318,45 +318,75 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
+                    // Platform badge with icon
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(
-                          alpha: 0.5,
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primary.withOpacity(0.8),
+                            colorScheme.secondary.withOpacity(0.8),
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        request.platform,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            request.platform == 'App'
+                                ? Icons.phone_android_rounded
+                                : Icons.web_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            request.platform,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 6),
+                    // Tech stack badge with icon
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
+                        horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.secondaryContainer.withValues(
-                          alpha: 0.5,
+                        color: colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: colorScheme.secondary.withOpacity(0.3),
                         ),
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Text(
-                        request.techStack,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.secondary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.code_rounded,
+                            size: 12,
+                            color: colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            request.techStack,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: colorScheme.secondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

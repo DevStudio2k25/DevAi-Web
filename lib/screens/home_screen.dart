@@ -89,6 +89,100 @@ class _HomeScreenState extends State<HomeScreen>
     final colorScheme = Theme.of(context).colorScheme;
     final user = FirebaseAuth.instance.currentUser;
 
+    // Log comprehensive dimensions for preview widget ratio calculation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = MediaQuery.of(context).size;
+      final padding = MediaQuery.of(context).padding;
+
+      debugPrint('\n╔═══════════════════════════════════════════════════════╗');
+      debugPrint('║     HOME SCREEN - COMPREHENSIVE DIMENSIONS LOG       ║');
+      debugPrint('╚═══════════════════════════════════════════════════════╝');
+      debugPrint('');
+      debugPrint('📱 SCREEN DIMENSIONS:');
+      debugPrint('   • Screen Width: ${size.width}');
+      debugPrint('   • Screen Height: ${size.height}');
+      debugPrint('   • Safe Area Top: ${padding.top}');
+      debugPrint('   • Safe Area Bottom: ${padding.bottom}');
+      debugPrint(
+        '   • Available Height: ${size.height - padding.top - padding.bottom}',
+      );
+      debugPrint('');
+      debugPrint('📐 LAYOUT CONSTANTS:');
+      debugPrint('   • Horizontal Padding: 20px (both sides = 40px total)');
+      debugPrint('   • Available Content Width: ${size.width - 40}');
+      debugPrint('');
+      debugPrint('🎯 HEADER SECTION:');
+      debugPrint('   • Avatar Radius: 24px (48px diameter)');
+      debugPrint('   • Avatar-Text Gap: 12px');
+      debugPrint('   • Token Badge Height: ~36px');
+      debugPrint(
+        '   • Total Header Height: ~88px (20px padding + 48px content + 20px padding)',
+      );
+      debugPrint('');
+      debugPrint('✨ HERO CARD (Generate Project):');
+      debugPrint('   • Border Width: 3px (gradient border)');
+      debugPrint('   • Inner Padding: 24px');
+      debugPrint('   • Icon Size: 32px');
+      debugPrint('   • Title Font: 24px');
+      debugPrint('   • Border Radius: 28px');
+      debugPrint('   • Estimated Height: ~180px');
+      debugPrint('');
+      debugPrint('👥 COMMUNITY CARD:');
+      debugPrint('   • Padding: 24px');
+      debugPrint('   • Icon Size: 40px');
+      debugPrint('   • Border Width: 2px');
+      debugPrint('   • Border Radius: 24px');
+      debugPrint('   • Estimated Height: ~120px');
+      debugPrint('');
+      debugPrint('🏆 TOP CREATORS GRID:');
+      debugPrint('   • Grid Columns: 3');
+      debugPrint('   • Cross Axis Spacing: 10px');
+      debugPrint('   • Main Axis Spacing: 10px');
+      debugPrint('   • Child Aspect Ratio: 0.75 (W/H)');
+      final cardWidth = (size.width - 40 - 20) / 3; // 40 padding, 20 spacing
+      final cardHeight = cardWidth / 0.75;
+      debugPrint('   • Card Width: ${cardWidth.toStringAsFixed(2)}px');
+      debugPrint('   • Card Height: ${cardHeight.toStringAsFixed(2)}px');
+      debugPrint('   • Grid Rows: 2');
+      debugPrint(
+        '   • Total Grid Height: ${(cardHeight * 2 + 10).toStringAsFixed(2)}px',
+      );
+      debugPrint('');
+      debugPrint('📊 SPACING BETWEEN SECTIONS:');
+      debugPrint('   • Header → Hero Card: 8px');
+      debugPrint('   • Hero Card → Community: 24px');
+      debugPrint('   • Community → Title: 24px');
+      debugPrint('   • Title → Grid: 16px');
+      debugPrint('   • Grid → Bottom: 100px (navbar space)');
+      debugPrint('');
+      debugPrint('🎨 ESTIMATED TOTAL CONTENT HEIGHT:');
+      final estimatedHeight =
+          88 + 8 + 180 + 24 + 120 + 24 + 16 + (cardHeight * 2 + 10) + 100;
+      debugPrint('   • Total: ${estimatedHeight.toStringAsFixed(2)}px');
+      debugPrint('');
+      debugPrint('📏 RECOMMENDED PREVIEW RATIO:');
+      final contentWidth = size.width - 40;
+      final aspectRatio = contentWidth / estimatedHeight;
+      debugPrint('   • Content Width: ${contentWidth.toStringAsFixed(2)}px');
+      debugPrint(
+        '   • Content Height: ${estimatedHeight.toStringAsFixed(2)}px',
+      );
+      debugPrint('   • Aspect Ratio (W/H): ${aspectRatio.toStringAsFixed(4)}');
+      debugPrint(
+        '   • Aspect Ratio (H/W): ${(1 / aspectRatio).toStringAsFixed(4)}',
+      );
+      debugPrint('');
+      debugPrint('💡 FOR PREVIEW WIDGET:');
+      debugPrint(
+        '   • Use Container with AspectRatio: ${aspectRatio.toStringAsFixed(4)}',
+      );
+      debugPrint(
+        '   • Or Height = Width * ${(1 / aspectRatio).toStringAsFixed(4)}',
+      );
+      debugPrint('');
+      debugPrint('╚═══════════════════════════════════════════════════════╝\n');
+    });
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

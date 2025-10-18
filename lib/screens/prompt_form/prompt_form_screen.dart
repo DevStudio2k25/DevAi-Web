@@ -19,11 +19,15 @@ import 'widgets/project_form_fields.dart';
 class PromptFormScreen extends StatefulWidget {
   final String? initialProjectName;
   final String? initialProjectDescription;
+  final String? initialPlatform;
+  final String? initialTechStack;
 
   const PromptFormScreen({
     super.key,
     this.initialProjectName,
     this.initialProjectDescription,
+    this.initialPlatform,
+    this.initialTechStack,
   });
 
   @override
@@ -60,6 +64,16 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
     if (widget.initialProjectDescription != null) {
       _topicController.text = widget.initialProjectDescription!;
     }
+    if (widget.initialPlatform != null) {
+      _selectedPlatform = widget.initialPlatform!;
+    }
+    if (widget.initialTechStack != null) {
+      _selectedTechStack = widget.initialTechStack!;
+    }
+
+    print(
+      '🎯 [PROMPT FORM] Auto-filled: Platform=$_selectedPlatform, Tech=$_selectedTechStack',
+    );
 
     // Reload tokens when screen opens
     print('🔄 [PROMPT FORM] Reloading tokens...');
@@ -183,6 +197,12 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
 
     print('🧭 [PROMPT FORM] Navigating to Streaming Result Screen...');
     if (!mounted) return;
+
+    // Get total phases for this project
+    final totalPhases = appProvider.geminiStreamingService.getTotalPhases(
+      request,
+    );
+
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -191,6 +211,7 @@ class _PromptFormScreenState extends State<PromptFormScreen> {
           responseStream: responseStream,
           request: request,
           shareWithCommunity: _shareWithCommunity,
+          totalPhases: totalPhases,
         ),
       ),
     );

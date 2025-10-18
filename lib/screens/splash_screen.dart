@@ -6,6 +6,7 @@ import 'package:lottie/lottie.dart';
 import '../constants/app_constants.dart';
 import '../providers/app_provider.dart';
 import '../services/auth_service.dart';
+import '../widgets/draw_text_animation.dart';
 import 'main_screen.dart';
 import 'auth_screen.dart';
 import 'api_key_screen.dart';
@@ -22,10 +23,10 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeLogoAnimation;
   late Animation<double> _scaleLogoAnimation;
-  late Animation<double> _fadeTextAnimation;
-  late Animation<double> _slideTextAnimation;
   late Animation<double> _fadeTaglineAnimation;
   late Animation<double> _pulseAnimation;
+  bool _showDrawText = false;
+  bool _animationError = false;
 
   @override
   void initState() {
@@ -50,20 +51,14 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // App name text fade and slide (2-4s)
-    _fadeTextAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.25, 0.5, curve: Curves.easeIn),
-      ),
-    );
-
-    _slideTextAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.25, 0.5, curve: Curves.easeOut),
-      ),
-    );
+    // Listen for when to show text animation (2-4s interval)
+    _controller.addListener(() {
+      if (_controller.value >= 0.25 && !_showDrawText) {
+        setState(() {
+          _showDrawText = true;
+        });
+      }
+    });
 
     // Tagline fade in (4-6s)
     _fadeTaglineAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -239,32 +234,15 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const SizedBox(height: 40),
-                      // Animated App Name
-                      FadeTransition(
-                        opacity: _fadeTextAnimation,
-                        child: Transform.translate(
-                          offset: Offset(0, _slideTextAnimation.value),
-                          child: Text(
-                            AppConstants.appName,
-                            style: Theme.of(context).textTheme.headlineLarge
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 48,
-                                  letterSpacing: 2,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      offset: const Offset(0, 4),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                          ),
-                        ),
-                      ),
+                      // Animated App Name with Stroke Drawing Effect
+                      if (_showDrawText && !_animationError)
+                        _buildDrawTextAnimation(context)
+                      else if (_animationError)
+                        _buildFallbackText(context)
+                      else
+                        const SizedBox(
+                          height: 48,
+                        ), // Placeholder to maintain layout
                       const SizedBox(height: 16),
                       // Animated Tagline
                       FadeTransition(
@@ -302,6 +280,77 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Build the draw text animation widget with error handling
+  Widget _buildDrawTextAnimation(BuildContext context) {
+    try {
+      return DrawTextAnimation(
+        text: AppConstants.appName,
+        duration: const Duration(milliseconds: 2000),
+        strokeColor: Colors.white,
+        strokeWidth: 3.0,
+        textStyle:
+            Theme.of(context).textTheme.headlineLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 48,
+              letterSpacing: 2,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 10,
+                ),
+              ],
+            ) ??
+            const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 48,
+              letterSpacing: 2,
+            ),
+        onFinish: () {
+          print('✍️ [SPLASH] Text drawing animation completed');
+        },
+      );
+    } catch (e) {
+      print('❌ [SPLASH] Error in text animation: $e');
+      setState(() {
+        _animationError = true;
+      });
+      return _buildFallbackText(context);
+    }
+  }
+
+  /// Build fallback text with simple fade-in if animation fails
+  Widget _buildFallbackText(BuildContext context) {
+    return FadeTransition(
+      opacity: AlwaysStoppedAnimation(1.0),
+      child: Text(
+        AppConstants.appName,
+        style:
+            Theme.of(context).textTheme.headlineLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 48,
+              letterSpacing: 2,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  offset: const Offset(0, 4),
+                  blurRadius: 10,
+                ),
+              ],
+            ) ??
+            const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 48,
+              letterSpacing: 2,
+            ),
       ),
     );
   }

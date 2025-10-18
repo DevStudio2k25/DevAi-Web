@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/windows11_theme.dart';
 import 'prompt_form/prompt_form_screen.dart';
 
 class ProjectIdeasScreen extends StatefulWidget {
@@ -11,6 +12,42 @@ class ProjectIdeasScreen extends StatefulWidget {
 class _ProjectIdeasScreenState extends State<ProjectIdeasScreen> {
   String _searchQuery = '';
   String _selectedTag = 'All';
+
+  // Helper function to suggest platform and tech stack based on tags
+  Map<String, String> _suggestPlatformAndTech(List<String> tags) {
+    // Check for mobile indicators
+    if (tags.contains('Mobile') || tags.contains('AR/VR')) {
+      return {'platform': 'App', 'techStack': 'Flutter'};
+    }
+
+    // Check for blockchain/web3
+    if (tags.contains('Blockchain') || tags.contains('Web3')) {
+      return {'platform': 'Web', 'techStack': 'React'};
+    }
+
+    // Check for AI/ML
+    if (tags.contains('AI/ML')) {
+      return {'platform': 'Web', 'techStack': 'Python (Flask/Django)'};
+    }
+
+    // Check for IoT
+    if (tags.contains('IoT')) {
+      return {'platform': 'Web', 'techStack': 'Node.js'};
+    }
+
+    // Check for gaming
+    if (tags.contains('Gaming')) {
+      return {'platform': 'App', 'techStack': 'Unity'};
+    }
+
+    // Default to web
+    if (tags.contains('Web')) {
+      return {'platform': 'Web', 'techStack': 'React'};
+    }
+
+    // Default fallback
+    return {'platform': 'Web', 'techStack': 'HTML/CSS/JS'};
+  }
 
   final List<String> _tags = [
     'All',
@@ -39,6 +76,8 @@ class _ProjectIdeasScreenState extends State<ProjectIdeasScreen> {
       'description':
           'Automated code review system using GPT-4 for pull requests',
       'tags': ['AI/ML', 'Cloud'],
+      'platform': 'Web',
+      'techStack': 'React',
     },
     {
       'name': 'Decentralized Social Network',
@@ -838,76 +877,153 @@ class _ProjectIdeasScreenState extends State<ProjectIdeasScreen> {
   Widget _buildProjectCard(BuildContext context, Map<String, dynamic> project) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
+    // Get suggested platform and tech stack
+    final suggestions = _suggestPlatformAndTech(
+      List<String>.from(project['tags'] ?? []),
+    );
+    final platform = project['platform'] ?? suggestions['platform']!;
+    final techStack = project['techStack'] ?? suggestions['techStack']!;
+
+    return AnimatedAcrylicCard(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.2)),
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PromptFormScreen(
-                initialProjectName: project['name'] ?? '',
-                initialProjectDescription: project['description'] ?? '',
-              ),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PromptFormScreen(
+              initialProjectName: project['name'] ?? '',
+              initialProjectDescription: project['description'] ?? '',
+              initialPlatform: platform,
+              initialTechStack: techStack,
             ),
-          );
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title with platform/tech badges
+          Row(
             children: [
-              Text(
-                project['name'],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  project['name'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                project['description'],
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+              // Platform badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
                 ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: (project['tags'] as List<String>).map((tag) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.primary.withOpacity(0.8),
+                      colorScheme.secondary.withOpacity(0.8),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      platform == 'App'
+                          ? Icons.phone_android_rounded
+                          : Icons.web_rounded,
+                      size: 12,
+                      color: Colors.white,
                     ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(
-                        alpha: 0.5,
+                    const SizedBox(width: 4),
+                    Text(
+                      platform,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text(
-                      tag,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  );
-                }).toList(),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 8),
+          // Tech stack badge
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              color: colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: colorScheme.secondary.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.code_rounded,
+                  size: 12,
+                  color: colorScheme.secondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  techStack,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: colorScheme.secondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            project['description'],
+            style: TextStyle(
+              fontSize: 14,
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: (project['tags'] as List<String>).map((tag) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(
+                    alpha: 0.5,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

@@ -21,103 +21,215 @@ class GeminiStreamingService {
     }
   }
 
-  // Phase-wise prompts
+  // Get total phase count for a request
+  int getTotalPhases(PromptRequest request) {
+    return _getRelevantPhases(request).length;
+  }
+
+  // Get selected phase numbers for a request
+  List<int> getSelectedPhases(PromptRequest request) {
+    return _getRelevantPhases(request);
+  }
+
+  // Manual retry for a specific phase with cooldown
+  Future<String> retryPhase(PromptRequest request, int phaseNumber) async {
+    if (_model == null) {
+      throw Exception('Gemini API not initialized');
+    }
+
+    print('🔄 [RETRY] Starting manual retry for phase $phaseNumber');
+    print('⏳ [RETRY] Waiting 20 seconds to avoid rate limiting...');
+
+    // 20 second cooldown to avoid rate limiting
+    await Future.delayed(const Duration(seconds: 20));
+
+    print('✅ [RETRY] Cooldown complete, generating phase $phaseNumber...');
+
+    final prompt = _buildPhasePrompt(request, phaseNumber);
+    final content = [Content.text(prompt)];
+
+    try {
+      final response = await _model!.generateContent(content);
+      final text = response.text;
+
+      if (text != null && text.trim().isNotEmpty) {
+        print(
+          '✅ [RETRY] Phase $phaseNumber regenerated successfully (${text.length} chars)',
+        );
+        return text.trim();
+      } else {
+        throw Exception('Empty response from API');
+      }
+    } catch (e) {
+      print('❌ [RETRY] Failed to regenerate phase $phaseNumber: $e');
+      throw Exception('Failed to regenerate: $e');
+    }
+  }
+
+  // Get phase title for error messages
+  String _getPhaseTitle(int phase) {
+    const titles = {
+      1: 'Project Overview',
+      2: 'Pages/Screens',
+      3: 'Key Features',
+      4: 'UI Design System',
+      5: 'Architecture & Folder Structure',
+      6: 'Recommended Packages',
+      7: 'Non-Functional Requirements',
+      8: 'Testing Strategy',
+      9: 'Acceptance Criteria (MVP)',
+      10: 'Development Roadmap',
+    };
+    return titles[phase] ?? 'Section $phase';
+  }
+
+  // Smart phase selection based on project complexity
+  List<int> _getRelevantPhases(PromptRequest request) {
+    final platform = request.platform.toLowerCase();
+    final techStack = request.techStack.toLowerCase();
+
+    // Simple web projects (HTML/CSS/JS, basic sites)
+    if (_isSimpleWebProject(platform, techStack)) {
+      return [
+        1,
+        2,
+        3,
+        4,
+        5,
+        10,
+      ]; // 6 phases: Overview, Pages, Features, Design, Structure, Roadmap
+    }
+
+    // Medium complexity (React, Vue, Angular, simple mobile)
+    if (_isMediumComplexity(platform, techStack)) {
+      return [1, 2, 3, 4, 5, 6, 9, 10]; // 8 phases: Skip NFR and Testing
+    }
+
+    // High complexity (Full-stack, Native mobile, Complex frameworks)
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // All 10 phases
+  }
+
+  bool _isSimpleWebProject(String platform, String techStack) {
+    // Simple HTML/CSS/JS projects
+    if (platform.contains('web') &&
+        (techStack.contains('html') ||
+            techStack.contains('css') ||
+            techStack.contains('javascript') &&
+                !techStack.contains('react') &&
+                !techStack.contains('vue') &&
+                !techStack.contains('angular'))) {
+      return true;
+    }
+    return false;
+  }
+
+  bool _isMediumComplexity(String platform, String techStack) {
+    // React, Vue, Angular, Svelte, Next.js
+    final mediumFrameworks = ['react', 'vue', 'angular', 'svelte', 'next'];
+
+    // Simple mobile apps (basic Flutter/React Native)
+    final simpleMobile = ['flutter', 'react native'];
+
+    for (var framework in mediumFrameworks) {
+      if (techStack.contains(framework)) return true;
+    }
+
+    if (platform.contains('app')) {
+      for (var tech in simpleMobile) {
+        if (techStack.contains(tech)) return true;
+      }
+    }
+
+    return false;
+  }
+
+  // Phase-wise prompts - CONCISE & PROJECT-SPECIFIC
   String _buildPhasePrompt(PromptRequest request, int phase) {
     final projectName = request.projectName;
     final topic = request.topic;
     final platform = request.platform;
     final techStack = request.techStack;
+    final isSimple = _isSimpleWebProject(
+      platform.toLowerCase(),
+      techStack.toLowerCase(),
+    );
 
     switch (phase) {
       case 1: // Project Overview
         return '''
-Generate ONLY the PROJECT OVERVIEW section for:
-Project: $projectName
+Generate CONCISE PROJECT OVERVIEW for: $projectName ($platform - $techStack)
 Topic: $topic
-Platform: $platform
-Tech Stack: $techStack
 
-Provide 2-3 detailed paragraphs covering:
-- What the project does
-- Target audience
-- Core problem it solves
-- Unique value proposition
-- MVP scope vs future enhancements
+${isSimple ? 'Keep it brief (2-3 paragraphs max)' : 'Provide 2-3 detailed paragraphs'} covering:
+- What it does & target audience
+- Core problem solved
+- ${isSimple ? 'Key features' : 'Unique value proposition & MVP scope'}
 
 Start with "# 1. Project Overview" heading.
 ''';
 
       case 2: // Pages/Screens
         return '''
-Generate ONLY the PAGES/SCREENS section for: $projectName
+Generate ${isSimple ? 'ESSENTIAL' : 'COMPLETE'} PAGES/SCREENS for: $projectName
 
-List ALL screens/pages needed with:
-- Detailed purpose for each
-- Navigation flow between screens
-- Which screens are MVP vs Phase 2
+List ${isSimple ? '4-6 main' : '8-12'} screens/pages:
+- Name & purpose (1 line each)
+- ${isSimple ? 'Basic navigation flow' : 'Navigation flow & MVP vs Phase 2'}
 
 Start with "# 2. Pages/Screens" heading.
 ''';
 
       case 3: // Key Features
         return '''
-Generate ONLY the KEY FEATURES section for: $projectName
+Generate ${isSimple ? 'CORE' : 'COMPREHENSIVE'} FEATURES for: $projectName
 
-List 8-12 features categorized as:
-- Core Features (MVP)
-- Advanced Features (Phase 2)
-- AI-Powered Features (if applicable)
+List ${isSimple ? '5-8' : '8-12'} features:
+${isSimple ? '- Focus on essential functionality only' : '- Categorize as Core (MVP) & Advanced (Phase 2)'}
+- Each feature: 1-2 lines max
 
-Each feature should have 2-3 lines of detail.
 Start with "# 3. Key Features" heading.
 ''';
 
       case 4: // UI Design System
         return '''
-Generate ONLY the UI DESIGN SYSTEM section for: $projectName
+Generate ${isSimple ? 'SIMPLE' : 'COMPLETE'} UI DESIGN SYSTEM for: $projectName
 
 Include:
-- Theme & Style
-- Color Palette with hex codes (Primary, Secondary, Success, Warning, Error, Background, Surface, Text)
-- Typography (Heading fonts, Body fonts, Monospace)
-- Icons (library specification)
-- Animations (key animations and transitions)
-- Layout Patterns (navigation, cards, etc.)
+- Color Palette with hex codes:
+  * Primary: #XXXXXX
+  * Secondary: #XXXXXX
+  * ${isSimple ? 'Background: #XXXXXX' : 'Success: #XXXXXX, Warning: #XXXXXX, Error: #XXXXXX'}
+  * ${isSimple ? 'Text: #XXXXXX' : 'Background: #XXXXXX, Surface: #XXXXXX, Text: #XXXXXX'}
+- Typography: ${isSimple ? 'Font family only' : 'Heading, Body, Monospace fonts'}
+${isSimple ? '' : '- Icons library\n- Key animations\n- Layout patterns'}
 
 Start with "# 4. UI Design System" heading.
 ''';
 
       case 5: // Architecture & Folder Structure
         return '''
-Generate ONLY the ARCHITECTURE & FOLDER STRUCTURE section for: $projectName
-Platform: $platform
-Tech Stack: $techStack
+Generate ${isSimple ? 'BASIC' : 'COMPLETE'} ARCHITECTURE for: $projectName ($techStack)
 
 Include:
-- Architecture pattern recommendation
-- State management approach
-- COMPLETE folder structure with all directories and files
-- Organized by feature/module
-- Include test folders
+- ${isSimple ? 'Simple folder structure (5-8 main folders)' : 'Architecture pattern & state management'}
+- ${isSimple ? 'Essential files only' : 'Complete folder structure organized by feature'}
+${isSimple ? '' : '- Test folders'}
 
 Start with "# 5. Architecture & Folder Structure" heading.
 ''';
 
       case 6: // Recommended Packages
         return '''
-Generate ONLY the RECOMMENDED PACKAGES section for: $projectName
-Tech Stack: $techStack
-Platform: $platform
+Generate ESSENTIAL PACKAGES for: $projectName ($techStack)
 
-Suggest packages for:
-- State Management (primary + alternative with reasoning)
-- Routing/Navigation (primary + alternative)
-- Local Storage (primary + alternative)
-- HTTP/API Client (primary + alternative)
-- Authentication
-- UI Components/Utilities
-- Testing frameworks
+List 5-8 key packages:
+- State Management (1 recommendation)
+- Routing (if needed)
+- HTTP/API Client
+- ${platform.toLowerCase().contains('app') ? 'Local Storage' : 'Form handling'}
+- UI utilities
 
+Keep it concise - name + 1 line purpose only.
 Start with "# 6. Recommended Packages" heading.
 ''';
 
@@ -180,30 +292,88 @@ Start with "# 10. Development Roadmap" heading.
       throw Exception('Gemini API not initialized');
     }
 
-    print('🚀 [STREAMING] Starting generation for: ${request.projectName}');
-    print('🔢 [STREAMING] Total phases: 10');
+    // Get relevant phases based on project complexity
+    final relevantPhases = _getRelevantPhases(request);
+    final totalPhases = relevantPhases.length;
 
-    // Generate each phase sequentially - EXACTLY 10 phases, no more
-    for (int phase = 1; phase <= 10; phase++) {
-      print('🔄 [STREAMING] Generating Phase $phase/10');
+    print('🚀 [STREAMING] Starting generation for: ${request.projectName}');
+    print('� [STRERAMING] Total phases: $totalPhases (Smart selection)');
+    print('📋 [STREAMING] Selected phases: $relevantPhases');
+
+    // Generate only relevant phases
+    for (int i = 0; i < relevantPhases.length; i++) {
+      final phase = relevantPhases[i];
+      final displayPhase = i + 1; // Display as 1, 2, 3... for user
+
+      print(
+        '🔄 [STREAMING] Generating Phase $displayPhase/$totalPhases (Original: Phase $phase)',
+      );
 
       final prompt = _buildPhasePrompt(request, phase);
       final content = [Content.text(prompt)];
 
-      try {
-        final response = await _model!.generateContent(content);
-        final text = response.text;
+      // Retry logic for failed phases
+      int retryCount = 0;
+      const maxRetries = 2;
+      bool success = false;
+      String? generatedText;
 
-        if (text != null && text.trim().isNotEmpty) {
-          print('✅ [STREAMING] Phase $phase complete (${text.length} chars)');
-          yield '${text.trim()}\n\n';
-        } else {
-          print('⚠️ [STREAMING] Phase $phase returned empty');
-          yield '# Section $phase\n\nNo content generated.\n\n';
+      while (!success && retryCount <= maxRetries) {
+        try {
+          if (retryCount > 0) {
+            print(
+              '🔄 [STREAMING] Retry attempt $retryCount for Phase $displayPhase',
+            );
+            await Future.delayed(
+              Duration(seconds: retryCount * 2),
+            ); // Exponential backoff
+          }
+
+          final response = await _model!.generateContent(content);
+          final text = response.text;
+
+          if (text != null && text.trim().isNotEmpty) {
+            generatedText = text;
+            success = true;
+            print(
+              '✅ [STREAMING] Phase $displayPhase/$totalPhases complete (${text.length} chars)${retryCount > 0 ? ' [Retry $retryCount]' : ''}',
+            );
+          } else {
+            print('⚠️ [STREAMING] Phase $phase returned empty');
+            retryCount++;
+          }
+        } catch (e) {
+          print(
+            '❌ [STREAMING] Phase $phase error (attempt ${retryCount + 1}): $e',
+          );
+          retryCount++;
+
+          if (retryCount > maxRetries) {
+            // Final failure - provide helpful error message
+            generatedText =
+                '''
+# ${_getPhaseTitle(phase)}
+
+⚠️ **Generation Failed**
+
+This section could not be generated due to:
+- API rate limiting or overload
+- Network connectivity issues
+- Model timeout
+
+**What you can do:**
+1. Try regenerating this project
+2. Simplify your project description
+3. Wait a few minutes and try again
+
+---
+''';
+          }
         }
-      } catch (e) {
-        print('❌ [STREAMING] Phase $phase error: $e');
-        yield '# Error in Phase $phase\n\nFailed to generate this section.\n\n';
+      }
+
+      if (generatedText != null) {
+        yield '${generatedText.trim()}\n\n';
       }
 
       // Small delay between phases to avoid rate limiting (except after last phase)

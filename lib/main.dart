@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // Import Firebase options
 import 'constants/app_constants.dart';
+import 'theme/theme_manager.dart';
 import 'providers/app_provider.dart';
 import 'screens/api_key_screen.dart';
 import 'screens/splash_screen.dart';
@@ -14,6 +15,7 @@ import 'screens/main_screen.dart';
 import 'screens/auth_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/promo_code_screen.dart';
+import 'screens/theme_selector_screen.dart';
 import 'services/gemini_service.dart';
 import 'services/gemini_streaming_service.dart';
 import 'services/storage_service.dart';
@@ -70,13 +72,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
 
+    // Get theme style
+    final themeStyle = provider.themeStyle == 'classic'
+        ? AppThemeStyle.classic
+        : AppThemeStyle.windows11;
+
     return MaterialApp(
       title: AppConstants.appName,
-      theme: AppConstants.lightTheme,
-      darkTheme: AppConstants.darkTheme,
+      theme: ThemeManager.getTheme(themeStyle, false),
+      darkTheme: ThemeManager.getTheme(themeStyle, true),
       themeMode: provider.themeMode,
-      themeAnimationDuration: const Duration(milliseconds: 500),
-      themeAnimationCurve: Curves.easeInOutCubicEmphasized,
+      themeAnimationDuration: const Duration(milliseconds: 300),
+      themeAnimationCurve: Curves.easeOutCubic,
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
@@ -88,6 +95,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/public-history': (context) => const PublicHistoryScreen(),
         '/promo-code': (context) => const PromoCodeScreen(),
+        '/theme-selector': (context) => const ThemeSelectorScreen(),
       },
     );
   }
