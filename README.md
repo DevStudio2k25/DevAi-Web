@@ -544,7 +544,7 @@ Created with ❤️ by **DevStudio**
 
 ## 📞 Support
 
-For support, email **devstudio2k25@gmail.com** or subscribe to our [YouTube channel](https://youtube.com/@devstudio2k25) for tutorials and updates.
+For support, email **devstudio2k25@gmail.com** or subscribe to our [YouTube channel](https://youtube.com/@DevStudio2k25) for tutorials and updates.
 
 ---
 
